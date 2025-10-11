@@ -38,15 +38,19 @@ export default function MapSearch() {
   }, []);
 
   return (
-    <div className="flex flex-col space-y-2">
+    <div className="max-w-lg mx-auto flex flex-col space-y-2">
       <input
         id="search-input"
         placeholder="Search for a restaurant"
-        className="textarea"
+        className="input"
       />
-      <div ref={mapRef} className="h-[500px] w-full" />
+      <div
+        ref={mapRef}
+        className="h-[500px] w-full rounded-md border-base-300 border-2"
+      />
       {id && (
         <>
+          <hr className="border-base-300 border-1" />
           <h1 className="text-xl font-bold">{name}</h1>
           <Link href={`/review/${id}`} className="btn w-max">
             Make a review

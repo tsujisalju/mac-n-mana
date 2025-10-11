@@ -1,6 +1,7 @@
 "use client";
 
 import ReviewForm from "@/components/ReviewForm";
+import Link from "next/link";
 import * as React from "react";
 
 export default function ReviewPage({
@@ -10,8 +11,9 @@ export default function ReviewPage({
 }) {
   const { placeId } = React.use(params);
   return (
-    <main>
-      <h1>Leave a Review</h1>
+    <main className="max-w-lg mx-auto">
+      <Link href="/">↩ Back</Link>
+      <h1 className="mt-4">Leave a Review</h1>
       <ReviewForm placeId={placeId} />
     </main>
   );
