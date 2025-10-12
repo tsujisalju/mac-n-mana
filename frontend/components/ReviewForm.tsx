@@ -29,7 +29,7 @@ export default function ReviewForm({ placeId }: { placeId: string }) {
         <label htmlFor="rating" className="font-bold">
           Rating
         </label>
-        <div className="rating">
+        <div className="rating flex flex-row space-x-4">
           {[1, 2, 3, 4, 5].map((val) => (
             <input
               key={val}

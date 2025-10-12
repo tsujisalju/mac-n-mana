@@ -30,6 +30,7 @@ export default function MapSearch() {
         )
           return;
         map.setCenter(place.geometry.location);
+        map.setZoom(20);
         setId(place.place_id);
         setName(place.name ?? "Unidentified Restaurant");
       });
@@ -39,6 +40,7 @@ export default function MapSearch() {
 
   return (
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
+      <h1 className="text-xl font-bold">What are you craving today?</h1>
       <input
         id="search-input"
         placeholder="Search for a restaurant"
@@ -46,12 +48,12 @@ export default function MapSearch() {
       />
       <div
         ref={mapRef}
-        className="h-[500px] w-full rounded-md border-base-300 border-2"
+        className="h-[400px] w-full rounded-md border-base-300 border-2"
       />
       {id && (
         <>
           <hr className="border-base-300 border-1" />
-          <h1 className="text-xl font-bold">{name}</h1>
+          <h1 className="text-3xl font-bold">{name}</h1>
           <Link href={`/review/${id}`} className="btn w-max">
             Make a review
           </Link>

@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import NavBar from "@/components/NavBar";
 import { Providers } from "./providers";
+import Welcome from "@/components/Welcome";
 
 const onest = Onest({
   variable: "--font-onest",
@@ -28,6 +29,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         <Providers>
+          <Welcome />
           <NavBar />
           {children}
         </Providers>
