@@ -7,6 +7,7 @@ import {
   polygon,
   sepolia,
 } from "wagmi/chains";
+import { hardhatLocal } from "./localchain";
 
 export const config = getDefaultConfig({
   appName: "Mac n' Mana",
@@ -17,7 +18,9 @@ export const config = getDefaultConfig({
     optimism,
     arbitrum,
     base,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [sepolia] : []),
+    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true"
+      ? [sepolia, hardhatLocal]
+      : []),
   ],
   ssr: true,
 });
