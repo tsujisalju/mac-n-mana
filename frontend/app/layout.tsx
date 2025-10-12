@@ -23,11 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="cupcake">
       <body className={`${onest.className} antialiased`}>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}&libraries=places`}
+          strategy="beforeInteractive"
+        />
         <Providers>
-          <Script
-            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}&libraries=places`}
-            strategy="beforeInteractive"
-          />
           <NavBar />
           {children}
         </Providers>

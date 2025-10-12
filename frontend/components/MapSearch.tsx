@@ -38,7 +38,7 @@ export default function MapSearch() {
   }, []);
 
   return (
-    <div className="max-w-lg mx-auto flex flex-col space-y-2">
+    <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
       <input
         id="search-input"
         placeholder="Search for a restaurant"

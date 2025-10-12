@@ -18,56 +18,30 @@ export default function ReviewForm({ placeId }: { placeId: string }) {
       }}
     >
       <div className="flex flex-col space-y-2">
+        <h1 className="font-sans font-bold text-xl mt-4">Leave a Review</h1>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter your review"
-          className="textarea"
+          className="textarea w-full"
           rows={8}
         />
-        <label>Rating</label>
+        <label htmlFor="rating" className="font-bold">
+          Rating
+        </label>
         <div className="rating">
-          <input
-            type="radio"
-            name="rating-1"
-            className="mask mask-star"
-            aria-label="1 star"
-          />
-          <input
-            type="radio"
-            name="rating-1"
-            className="mask mask-star"
-            aria-label="2 star"
-          />
-          <input
-            type="radio"
-            name="rating-1"
-            className="mask mask-star"
-            aria-label="3 star"
-          />
-          <input
-            type="radio"
-            name="rating-1"
-            className="mask mask-star"
-            aria-label="4 star"
-          />
-          <input
-            type="radio"
-            name="rating-1"
-            className="mask mask-star"
-            aria-label="5 star"
-            defaultChecked
-          />
+          {[1, 2, 3, 4, 5].map((val) => (
+            <input
+              key={val}
+              type="radio"
+              name="rating"
+              className="mask mask-star-2"
+              checked={rating == val}
+              onChange={() => setRating(val)}
+            />
+          ))}
         </div>
-        <input
-          type="number"
-          value={rating}
-          onChange={(e) => setRating(+e.target.value)}
-          min={1}
-          max={5}
-          className="input"
-        />
-        <button type="submit" className="btn w-max">
+        <button type="submit" className="btn w-max mt-4">
           Submit Review
         </button>
       </div>

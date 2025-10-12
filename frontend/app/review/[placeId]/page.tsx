@@ -11,9 +11,8 @@ export default function ReviewPage({
 }) {
   const { placeId } = React.use(params);
   return (
-    <main className="max-w-lg mx-auto">
+    <main className="max-w-lg mx-auto px-4">
       <Link href="/">↩ Back</Link>
-      <h1 className="mt-4">Leave a Review</h1>
       <ReviewForm placeId={placeId} />
     </main>
   );
