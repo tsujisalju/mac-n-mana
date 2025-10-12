@@ -1,5 +1,6 @@
 "use client";
 
+import { Review, uploadReviewToIPFS } from "@/lib/storage";
 import { useState } from "react";
 
 export default function ReviewForm({ placeId }: { placeId: string }) {
@@ -7,7 +8,14 @@ export default function ReviewForm({ placeId }: { placeId: string }) {
   const [rating, setRating] = useState(5);
 
   const handleSubmit = async () => {
-    console.log("Submitting review for", placeId, text, rating);
+    console.log("Submitting review:", placeId, text, rating);
+    const review: Review = {
+      placeId: placeId,
+      text: text,
+      rating: rating,
+    };
+    const cid = await uploadReviewToIPFS(review);
+    console.log("Review submitted to IPFS:", cid);
   };
 
   return (
