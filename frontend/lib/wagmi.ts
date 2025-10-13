@@ -1,12 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import {
-  arbitrum,
-  base,
-  mainnet,
-  optimism,
-  polygon,
-  sepolia,
-} from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 import { hardhatLocal } from "./localchain";
 
 export const config = getDefaultConfig({
