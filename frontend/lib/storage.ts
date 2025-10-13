@@ -14,7 +14,7 @@ export async function uploadReviewToIPFS(review: Review) {
     "did:key:z6MkthzSovR8bGvcDwMsdUEHLwYL52ZYyDRirnczRzWaMV6J",
   );
   const blob = new Blob([JSON.stringify(review)], { type: "application/json" });
-  const files = [new File([blob], "reviews/review.json")];
+  const files = [new File([blob], "review.json")];
   const directoryCid = await client.uploadDirectory(files);
   return directoryCid;
 }

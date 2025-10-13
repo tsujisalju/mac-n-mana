@@ -1,21 +1,45 @@
 "use client";
 
 import { Review, uploadReviewToIPFS } from "@/lib/storage";
+import { showToast } from "@/lib/toast";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function ReviewForm({ placeId }: { placeId: string }) {
+export default function ReviewForm({
+  placeId,
+  name,
+}: {
+  placeId: string;
+  name: string;
+}) {
   const [text, setText] = useState("");
   const [rating, setRating] = useState(5);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   const handleSubmit = async () => {
     console.log("Submitting review:", placeId, text, rating);
-    const review: Review = {
-      placeId: placeId,
-      text: text,
-      rating: rating,
-    };
-    const cid = await uploadReviewToIPFS(review);
-    console.log("Review submitted to IPFS:", cid);
+    setIsLoading(true);
+    try {
+      const review: Review = {
+        placeId: placeId,
+        text: text,
+        rating: rating,
+      };
+      const cid = await uploadReviewToIPFS(review);
+      console.log("Review submitted to IPFS:", cid);
+      showToast("Your review has been submitted!", "success");
+      router.push("/");
+    } catch (err) {
+      console.error("Upload failed:", err);
+      showToast(
+        "Review could not be submitted. Please try again later.",
+        "error",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -26,7 +50,8 @@ export default function ReviewForm({ placeId }: { placeId: string }) {
       }}
     >
       <div className="flex flex-col space-y-2">
-        <h1 className="font-sans font-bold text-xl mt-4">Leave a Review</h1>
+        <h1 className="text-3xl font-bold mt-4">{name}</h1>
+        <h1 className="font-bold text-xl">Leave a Review</h1>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -49,7 +74,8 @@ export default function ReviewForm({ placeId }: { placeId: string }) {
             />
           ))}
         </div>
-        <button type="submit" className="btn w-max mt-4">
+        <button type="submit" className="btn w-max mt-4" disabled={isLoading}>
+          {isLoading && <span className="loading loading-spinner"></span>}
           Submit Review
         </button>
       </div>

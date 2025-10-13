@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -7,6 +8,17 @@ export default function MapSearch() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
+
+  const messages = [
+    "Ate somewhere awesome today?",
+    "Found a hidden food gem?",
+    "What are you craving today?",
+    "What's cooking?",
+  ];
+
+  const random = Math.floor(Math.random() * messages.length);
+
   useEffect(() => {
     const initMap = () => {
       const map = new google.maps.Map(mapRef.current!, {
@@ -33,6 +45,10 @@ export default function MapSearch() {
         map.setZoom(20);
         setId(place.place_id);
         setName(place.name ?? "Unidentified Restaurant");
+        const photos = place.photos?.map((p) =>
+          p.getUrl({ maxWidth: 400, maxHeight: 300 }),
+        );
+        setPhotos(photos ?? []);
       });
     };
     if (window.google) initMap();
@@ -40,21 +56,52 @@ export default function MapSearch() {
 
   return (
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
-      <h1 className="text-xl font-bold">What are you craving today?</h1>
-      <input
-        id="search-input"
-        placeholder="Search for a restaurant"
-        className="input"
-      />
+      <h1 className="text-xl font-bold">{messages[random]}</h1>
+      <label className="input w-full">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="opacity-20 size-6"
+        >
+          <path
+            fillRule="evenodd"
+            d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <input
+          id="search-input"
+          placeholder="Search for a restaurant"
+          type="text"
+          className="grow"
+        />
+      </label>
       <div
         ref={mapRef}
-        className="h-[400px] w-full rounded-md border-base-300 border-2"
+        className="h-[300px] w-full rounded-md border-base-300 border-2"
       />
       {id && (
         <>
           <hr className="border-base-300 border-1" />
           <h1 className="text-3xl font-bold">{name}</h1>
-          <Link href={`/review/${id}`} className="btn w-max">
+          <div className="carousel w-full rounded-md">
+            {photos.map((photo, index) => (
+              <div key={index} id={`slide-${index}`} className="carousel-item">
+                <Image
+                  src={photo}
+                  className="w-full"
+                  alt={name + " photo " + index}
+                  width={400}
+                  height={300}
+                />
+              </div>
+            ))}
+          </div>
+          <Link
+            href={`/review?placeId=${id}&name=${name}`}
+            className="btn btn-neutral w-max"
+          >
             Make a review
           </Link>
         </>
