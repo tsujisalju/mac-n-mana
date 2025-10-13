@@ -1,5 +1,6 @@
 "use client";
 
+import { submitReview } from "@/lib/contractActions";
 import { Review, uploadReviewToIPFS } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ export default function ReviewForm({
       };
       const cid = await uploadReviewToIPFS(review);
       console.log("Review submitted to IPFS:", cid);
+      await submitReview(placeId, cid.toString(), rating);
       showToast("Your review has been submitted!", "success");
       router.push("/");
     } catch (err) {

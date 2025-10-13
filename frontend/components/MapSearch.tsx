@@ -1,14 +1,18 @@
 "use client";
 
+import { fetchReviewsByPlaceId, Item } from "@/lib/blockscout";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useAccount } from "wagmi";
 
 export default function MapSearch() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [reviews, setReviews] = useState<Item[]>([]);
+  const [randomMessage, setRandomMessage] = useState<number>(0);
 
   const messages = [
     "Ate somewhere awesome today?",
@@ -17,7 +21,29 @@ export default function MapSearch() {
     "What's cooking?",
   ];
 
-  const random = Math.floor(Math.random() * messages.length);
+  const { isConnected } = useAccount();
+
+  useEffect(() => {
+    if (!isConnected) {
+      setId("");
+      setName("");
+      setPhotos([]);
+      setReviews([]);
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    setRandomMessage(Math.floor(Math.random() * messages.length));
+  }, [messages.length]);
+
+  useEffect(() => {
+    const fetchReview = async (placeId: string) => {
+      const data = await fetchReviewsByPlaceId(placeId);
+      console.log(data);
+      setReviews(data);
+    };
+    if (id) fetchReview(id);
+  }, [id]);
 
   useEffect(() => {
     const initMap = () => {
@@ -52,11 +78,11 @@ export default function MapSearch() {
       });
     };
     if (window.google) initMap();
-  }, []);
+  }, [id]);
 
   return (
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
-      <h1 className="text-xl font-bold">{messages[random]}</h1>
+      <h1 className="text-xl font-bold">{messages[randomMessage]}</h1>
       <label className="input w-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +108,7 @@ export default function MapSearch() {
         className="h-[300px] w-full rounded-md border-base-300 border-2"
       />
       {id && (
-        <>
+        <div className="flex flex-col space-y-4">
           <hr className="border-base-300 border-1" />
           <h1 className="text-3xl font-bold">{name}</h1>
           <div className="carousel w-full rounded-md">
@@ -104,7 +130,17 @@ export default function MapSearch() {
           >
             Make a review
           </Link>
-        </>
+          <h2 className="text-2xl font-bold">Reviews</h2>
+          <div className="flex flex-col space-y-2">
+            {reviews.length > 0 ? (
+              reviews.map((review, i) => (
+                <p key={i}>{review.decoded.parameters[1].value}</p>
+              ))
+            ) : (
+              <p>No on-chain reviews found for this place.</p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

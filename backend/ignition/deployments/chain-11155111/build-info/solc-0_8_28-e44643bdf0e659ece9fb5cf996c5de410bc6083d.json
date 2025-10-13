@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-e44643bdf0e659ece9fb5cf996c5de410bc6083d",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/ReviewRegistry.sol": "project/contracts/ReviewRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/ReviewRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\ncontract ReviewRegistry {\n    struct Review {\n        address reviewer;\n        string placeId;\n        string ipfsHash;\n        uint8 rating;\n        uint256 timestamp;\n        int256 reputationScore;\n    }\n\n    mapping(uint256 => Review) public reviews; //store reviews by ID\n    uint256 public reviewCount; //increment ID for each new review\n\n    mapping(address => int256) public userReputation; //track reputation score for each ReviewRegistry\n\n    event ReviewSubmitted(uint256 indexed reviewId, address indexed reviewer, string placeId);\n    event ReviewVoted(uint256 indexed reviewId, address indexed voter, int8 vote);\n\n    function submitReview(string memory placeId, string memory ipfsHash, uint8 rating) external {\n        require(rating >= 1 && rating <= 5, \"Invalid rating\");\n        reviews[reviewCount] = Review({\n            reviewer: msg.sender,\n            placeId: placeId,\n            ipfsHash: ipfsHash,\n            rating: rating,\n            timestamp: block.timestamp,\n            reputationScore: 0\n        });\n\n        emit ReviewSubmitted(reviewCount, msg.sender, placeId);\n        reviewCount++;\n    }\n\n    function voteReview(uint256 reviewId, int8 vote) external {\n        require(reviewId < reviewCount, \"Review does not exist\");\n        require(vote == 1 || vote == -1, \"Vote must be +1 or -1\");\n\n        Review storage review = reviews[reviewId];\n        review.reputationScore += vote;\n        userReputation[review.reviewer] += vote;\n\n        emit ReviewVoted(reviewId, msg.sender, vote);\n    }\n\n    function getReview(uint256 reviewId) external view returns (Review memory) {\n        require(reviewId < reviewCount, \"Review does not exist\");\n        return reviews[reviewId];\n    }\n\n    function getUserReputation(address user) external view returns (int256) {\n        return userReputation[user];\n    }\n}\n"
+      }
+    }
+  }
+}

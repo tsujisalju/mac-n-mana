@@ -8,7 +8,7 @@ export default function NavBar() {
     <div className="max-w-lg mx-auto p-4 flex flex-row justify-between items-center">
       <div className="flex flex-row space-x-2 items-center">
         <span>🍔</span>
-        <Logo className="w-32" />
+        <Logo className="h-8" />
       </div>
       <div>
         <ConnectButton

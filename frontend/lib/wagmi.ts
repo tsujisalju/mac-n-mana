@@ -12,15 +12,6 @@ import { hardhatLocal } from "./localchain";
 export const config = getDefaultConfig({
   appName: "Mac n' Mana",
   projectId: "YOUR_PROJECT_ID",
-  chains: [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true"
-      ? [sepolia, hardhatLocal]
-      : []),
-  ],
+  chains: [sepolia, hardhatLocal],
   ssr: true,
 });
