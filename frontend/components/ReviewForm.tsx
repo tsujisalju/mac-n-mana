@@ -3,21 +3,25 @@
 import { submitReview } from "@/lib/contractActions";
 import { Review, uploadReviewToIPFS } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export default function ReviewForm({
-  placeId,
-  name,
-}: {
-  placeId: string;
-  name: string;
-}) {
+export default function ReviewForm() {
   const [text, setText] = useState("");
   const [rating, setRating] = useState(5);
   const [isLoading, setIsLoading] = useState(false);
 
+  const searchParams = useSearchParams();
+  const placeId = searchParams.get("placeId") ?? "";
+  const name = searchParams.get("name");
   const router = useRouter();
+
+  useEffect(() => {
+    if (!placeId || !name) {
+      showToast("Unable to get restaurant info. Please search again.");
+      router.push("/");
+    }
+  }, [placeId, name, router]);
 
   const handleSubmit = async () => {
     console.log("Submitting review:", placeId, text, rating);
