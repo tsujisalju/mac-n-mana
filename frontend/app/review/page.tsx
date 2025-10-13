@@ -4,7 +4,7 @@ import ReviewForm from "@/components/ReviewForm";
 import { showToast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -22,7 +22,9 @@ export default function ReviewPage() {
   return (
     <main className="max-w-lg mx-auto px-4">
       <Link href="/">↩ Back</Link>
-      <ReviewForm placeId={placeId} name={name} />
+      <Suspense>
+        <ReviewForm placeId={placeId} name={name} />
+      </Suspense>
     </main>
   );
 }
