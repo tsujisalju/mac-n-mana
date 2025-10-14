@@ -78,7 +78,7 @@ export default function MapSearch() {
       });
     };
     if (window.google) initMap();
-  }, [id]);
+  }, []);
 
   return (
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
