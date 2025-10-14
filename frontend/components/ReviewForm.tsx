@@ -1,7 +1,8 @@
 "use client";
 
+import { useStoracha } from "@/context/storacha";
 import { submitReview } from "@/lib/contractActions";
-import { Review, uploadReviewToIPFS } from "@/lib/storage";
+import { Review } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +17,8 @@ export default function ReviewForm() {
   const name = searchParams.get("name");
   const router = useRouter();
 
+  const storacha = useStoracha();
+
   useEffect(() => {
     if (!placeId || !name) {
       showToast("Unable to get restaurant info. Please search again.");
@@ -27,12 +30,17 @@ export default function ReviewForm() {
     console.log("Submitting review:", placeId, text, rating);
     setIsLoading(true);
     try {
+      if (!storacha) throw new Error("Storacha client not initialized");
       const review: Review = {
         placeId: placeId,
         text: text,
         rating: rating,
       };
-      const cid = await uploadReviewToIPFS(review);
+      const blob = new Blob([JSON.stringify(review)], {
+        type: "application/json",
+      });
+      const files = [new File([blob], "review.json")];
+      const cid = await storacha.uploadDirectory(files);
       console.log("Review submitted to IPFS:", cid);
       await submitReview(placeId, cid.toString(), rating);
       showToast("Your review has been submitted!", "success");

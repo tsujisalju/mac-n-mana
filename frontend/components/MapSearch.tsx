@@ -130,7 +130,7 @@ export default function MapSearch() {
           >
             Make a review
           </Link>
-          <h2 className="text-2xl font-bold">Reviews</h2>
+          <h2 className="text-2xl font-bold">On-chain Reviews</h2>
           <div className="flex flex-col space-y-2">
             {reviews.length > 0 ? (
               reviews.map((review, i) => (

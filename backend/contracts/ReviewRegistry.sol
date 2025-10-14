@@ -16,7 +16,7 @@ contract ReviewRegistry {
 
     mapping(address => int256) public userReputation; //track reputation score for each ReviewRegistry
 
-    event ReviewSubmitted(uint256 indexed reviewId, address indexed reviewer, string placeId);
+    event ReviewSubmitted(uint256 indexed reviewId, address indexed reviewer, string placeId, string ipfsHash);
     event ReviewVoted(uint256 indexed reviewId, address indexed voter, int8 vote);
 
     function submitReview(string memory placeId, string memory ipfsHash, uint8 rating) external {
@@ -30,7 +30,7 @@ contract ReviewRegistry {
             reputationScore: 0
         });
 
-        emit ReviewSubmitted(reviewCount, msg.sender, placeId);
+        emit ReviewSubmitted(reviewCount, msg.sender, placeId, ipfsHash);
         reviewCount++;
     }
 
