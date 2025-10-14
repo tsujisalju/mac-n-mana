@@ -6,7 +6,6 @@ import { WagmiProvider } from "wagmi";
 import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { config } from "@/lib/wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
-import { StorachaProvider } from "@/context/storacha";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             fontStack: "system",
           })}
         >
-          <StorachaProvider>{children}</StorachaProvider>
+          {children}
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
