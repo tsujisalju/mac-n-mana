@@ -11,5 +11,5 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-onest);
+  --font-sans: var(--font-onest), "sans-serif";
 }

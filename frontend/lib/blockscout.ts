@@ -1,3 +1,12 @@
+import { reviewRegistryConfig } from "./contracts/reviewRegistry";
+import { getReviewByCID } from "./storage";
+
+export interface Review {
+  reviewer: string;
+  text: string;
+  rating: number;
+}
+
 export interface EventLogs {
   items: Item[];
   next_page_params: unknown;
@@ -62,12 +71,29 @@ export interface SmartContract {
 
 export async function fetchReviewsByPlaceId(placeId: string) {
   const res = await fetch(
-    "https://eth-sepolia.blockscout.com/api/v2/addresses/0xD888020802d9EfcE18F5dC2Df9d6DEfcCd49BDB8/logs",
+    `https://eth-sepolia.blockscout.com/api/v2/addresses/${reviewRegistryConfig.address}/logs`,
   );
   const data: EventLogs = await res.json();
-  return data.items.filter((event) =>
-    event.decoded.parameters.some(
+  const placeData = data.items.filter((event) => {
+    return event.decoded?.parameters.some(
       (p) => p.name === "placeId" && p.value === placeId,
-    ),
+    );
+  });
+
+  const reviews: Review[] = await Promise.all(
+    placeData.map(async (event) => {
+      const params = event.decoded?.parameters;
+      const ipfsParam = params?.find((p) => p.name === "ipfsHash");
+      const reviewerParam = params?.find((p) => p.name === "reviewer");
+      const cid = ipfsParam?.value;
+      const reviewData = cid ? await getReviewByCID(cid) : null;
+
+      return {
+        reviewer: reviewerParam?.value ?? "Unknown reviewer",
+        text: reviewData?.text ?? "Unknown review",
+        rating: reviewData?.rating ?? 0,
+      };
+    }),
   );
+  return reviews;
 }

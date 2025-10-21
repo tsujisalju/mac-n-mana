@@ -16,8 +16,8 @@ contract ReviewRegistry {
 
     mapping(address => int256) public userReputation; //track reputation score for each ReviewRegistry
 
-    event ReviewSubmitted(uint256 indexed reviewId, address indexed reviewer, string placeId, string ipfsHash);
-    event ReviewVoted(uint256 indexed reviewId, address indexed voter, int8 vote);
+    event ReviewSubmitted(uint256 reviewId, address indexed reviewer, string placeId, string ipfsHash);
+    event ReviewVoted(uint256 reviewId, address indexed voter, int8 vote);
 
     function submitReview(string memory placeId, string memory ipfsHash, uint8 rating) external {
         require(rating >= 1 && rating <= 5, "Invalid rating");

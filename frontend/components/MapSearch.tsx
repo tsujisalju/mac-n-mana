@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchReviewsByPlaceId, Item } from "@/lib/blockscout";
+import { fetchReviewsByPlaceId, Review } from "@/lib/blockscout";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,8 @@ export default function MapSearch() {
   const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
-  const [reviews, setReviews] = useState<Item[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [randomMessage, setRandomMessage] = useState<number>(0);
 
   const messages = [
@@ -38,9 +39,16 @@ export default function MapSearch() {
 
   useEffect(() => {
     const fetchReview = async (placeId: string) => {
-      const data = await fetchReviewsByPlaceId(placeId);
-      console.log(data);
-      setReviews(data);
+      setIsLoading(true);
+      try {
+        const data = await fetchReviewsByPlaceId(placeId);
+        console.log(data);
+        setReviews(data);
+      } catch (err) {
+        console.error("Error when loading reviews:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
     if (id) fetchReview(id);
   }, [id]);
@@ -82,7 +90,7 @@ export default function MapSearch() {
 
   return (
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
-      <h1 className="text-xl font-bold">{messages[randomMessage]}</h1>
+      <h1 className="text-2xl font-bold">{messages[randomMessage]}</h1>
       <label className="input w-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -131,15 +139,34 @@ export default function MapSearch() {
             Make a review
           </Link>
           <h2 className="text-2xl font-bold">On-chain Reviews</h2>
-          <div className="flex flex-col space-y-2">
-            {reviews.length > 0 ? (
-              reviews.map((review, i) => (
-                <p key={i}>{review.decoded.parameters[1].value}</p>
-              ))
-            ) : (
-              <p>No on-chain reviews found for this place.</p>
-            )}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-4">
+              <span className="loading loading-spinner"></span>
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-2">
+              {reviews.length > 0 ? (
+                reviews.map((review, i) => (
+                  <div key={i}>
+                    <p className="font-bold">{review.reviewer}</p>
+                    <p>{review.text}</p>
+                    <div className="rating flex flex-row space-x-4">
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <div
+                          key={val}
+                          className="mask mask-star"
+                          aria-label={val + " star"}
+                          aria-current={val == review.rating && "true"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No on-chain reviews found for this place.</p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

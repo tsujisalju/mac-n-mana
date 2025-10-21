@@ -1,7 +1,7 @@
 "use client";
 
 import { submitReview } from "@/lib/contractActions";
-import { Review, uploadReviewToIPFS } from "@/lib/storage";
+import { ReviewUpload, uploadReviewToIPFS } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,14 +27,14 @@ export default function ReviewForm() {
     console.log("Submitting review:", placeId, text, rating);
     setIsLoading(true);
     try {
-      const review: Review = {
+      const review: ReviewUpload = {
         placeId: placeId,
         text: text,
         rating: rating,
       };
       const cid = await uploadReviewToIPFS(review);
       console.log("Review submitted to IPFS:", cid);
-      await submitReview(placeId, cid.toString(), rating);
+      await submitReview(placeId, cid, rating);
       showToast("Your review has been submitted!", "success");
       router.push("/");
     } catch (err) {
