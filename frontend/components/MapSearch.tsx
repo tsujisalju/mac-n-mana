@@ -88,9 +88,11 @@ export default function MapSearch() {
     if (window.google) initMap();
   }, []);
 
-  return (
+return (
+    // Keep original container styling
     <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
       <h1 className="text-2xl font-bold">{messages[randomMessage]}</h1>
+      {/* Keep original label styling */}
       <label className="input w-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -111,14 +113,17 @@ export default function MapSearch() {
           className="grow"
         />
       </label>
+      {/* Keep original map div styling */}
       <div
         ref={mapRef}
         className="h-[300px] w-full rounded-md border-base-300 border-2"
       />
       {id && (
+        // Keep original result div styling
         <div className="flex flex-col space-y-4">
           <hr className="border-base-300 border-1" />
           <h1 className="text-3xl font-bold">{name}</h1>
+          {/* Keep original Google photos carousel styling */}
           <div className="carousel w-full rounded-md">
             {photos.map((photo, index) => (
               <div key={index} id={`slide-${index}`} className="carousel-item">
@@ -128,41 +133,63 @@ export default function MapSearch() {
                   alt={name + " photo " + index}
                   width={400}
                   height={300}
+                  unoptimized // Add unoptimized if domain not in next.config
                 />
               </div>
             ))}
           </div>
+          {/* Keep original Link styling */}
           <Link
-            href={`/review?placeId=${id}&name=${name}`}
+            href={`/review?placeId=${id}&name=${encodeURIComponent(name)}`} // Encode name
             className="btn btn-neutral w-max"
           >
             Make a review
           </Link>
           <h2 className="text-2xl font-bold">On-chain Reviews</h2>
           {isLoading ? (
+            // Keep original loading indicator styling
             <div className="flex justify-center items-center py-4">
               <span className="loading loading-spinner"></span>
             </div>
           ) : (
+             // Keep original reviews container styling
             <div className="flex flex-col space-y-2">
               {reviews.length > 0 ? (
                 reviews.map((review, i) => (
+                  // Keep original individual review div styling
                   <div key={i}>
                     <p className="font-bold">{review.reviewer}</p>
+                    {review.imageUrls && review.imageUrls.length > 0 && (
+                        <div className="my-2 grid grid-cols-3 gap-2"> {/* Or use carousel/scroll */}
+                            {review.imageUrls.map((imageUrl, imgIndex) => (
+                                <Image
+                                    key={imgIndex}
+                                    src={imageUrl}
+                                    alt={`Review image ${imgIndex + 1} by ${review.reviewer.substring(0, 8)}...`}
+                                    width={100} // Smaller size for multiple images
+                                    height={100}
+                                    className="rounded-md object-cover w-full h-24" // Adjust styling
+                                    unoptimized
+                                    priority={i < 1 && imgIndex < 3} // Prioritize first review's images
+                                />
+                            ))}
+                        </div>
+                    )}
                     <p>{review.text}</p>
                     <div className="rating flex flex-row space-x-4">
                       {[1, 2, 3, 4, 5].map((val) => (
                         <div
                           key={val}
-                          className="mask mask-star"
+                          className={`mask mask-star`} // Conditional styling for filled stars
                           aria-label={val + " star"}
-                          aria-current={val == review.rating && "true"}
+                          aria-current={val == review.rating && "true"} // Less necessary with bg color
                         />
                       ))}
                     </div>
                   </div>
                 ))
               ) : (
+                 // Keep original no-reviews message
                 <p>No on-chain reviews found for this place.</p>
               )}
             </div>
