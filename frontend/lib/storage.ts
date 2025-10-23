@@ -5,10 +5,16 @@ import { StoreMemory } from "@storacha/client/stores";
 import { create } from "@storacha/client";
 import * as Proof from "@storacha/client/proof";
 
-export interface ReviewUpload {
-  placeId: string;
+export interface ReviewData {
+  reviewer: string;
   text: string;
   rating: number;
+}
+
+export interface ReviewUpload {
+  placeId: string | undefined;
+  text: string | undefined;
+  rating: number | undefined;
   tags?: string[];
 }
 
@@ -29,7 +35,19 @@ export async function uploadReviewToIPFS(review: ReviewUpload) {
 }
 
 export async function getReviewByCID(cid: string) {
-  const res = await fetch("https://" + cid + ".ipfs.storacha.link/review.json");
-  const review: ReviewUpload = await res.json();
-  return review;
+  try {
+    const url = "https://" + cid + ".ipfs.w3s.link/review.json";
+    console.log("Retrieving review via", url);
+    const res = await fetch(url);
+    const review: ReviewUpload = await res.json();
+    return review;
+  } catch (err) {
+    console.error("Error when fetching review " + cid, err);
+    const empty: ReviewUpload = {
+      placeId: undefined,
+      text: undefined,
+      rating: 0,
+    };
+    return empty;
+  }
 }

@@ -1,11 +1,5 @@
 import { reviewRegistryConfig } from "./contracts/reviewRegistry";
-import { getReviewByCID } from "./storage";
-
-export interface Review {
-  reviewer: string;
-  text: string;
-  rating: number;
-}
+import { getReviewByCID, ReviewData } from "./storage";
 
 export interface EventLogs {
   items: Item[];
@@ -80,7 +74,7 @@ export async function fetchReviewsByPlaceId(placeId: string) {
     );
   });
 
-  const reviews: Review[] = await Promise.all(
+  const reviews: ReviewData[] = await Promise.all(
     placeData.map(async (event) => {
       const params = event.decoded?.parameters;
       const ipfsParam = params?.find((p) => p.name === "ipfsHash");
