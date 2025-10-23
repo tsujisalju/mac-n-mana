@@ -7,10 +7,16 @@ import { create } from "@storacha/client";
 import * as Proof from "@storacha/client/proof";
 import { File } from '@web-std/file';
 
-export interface ReviewUpload {
-  placeId: string;
+export interface ReviewData {
+  reviewer: string;
   text: string;
   rating: number;
+}
+
+export interface ReviewUpload {
+  placeId: string | undefined;
+  text: string | undefined;
+  rating: number | undefined;
   tags?: string[];
   imageFilenames?: string[]; // --- Changed to array ---
 }

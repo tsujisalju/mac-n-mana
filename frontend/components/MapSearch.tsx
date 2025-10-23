@@ -1,6 +1,7 @@
 "use client";
 
-import { fetchReviewsByPlaceId, Review } from "@/lib/blockscout";
+import { fetchReviewsByPlaceId } from "@/lib/blockscout";
+import { ReviewData } from "@/lib/storage";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +12,7 @@ export default function MapSearch() {
   const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [randomMessage, setRandomMessage] = useState<number>(0);
 
