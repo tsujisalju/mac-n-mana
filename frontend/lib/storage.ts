@@ -31,7 +31,7 @@ export async function uploadReviewToIPFS(review: ReviewUpload, imageFiles: File[
   const space = await client.addSpace(proof);
   await client.setCurrentSpace(space.did());
 
-  let reviewDataToUpload: ReviewUpload = { ...review };
+  const reviewDataToUpload: ReviewUpload = { ...review };
   const filesToUpload: File[] = [];
 
   if (imageFiles.length > 0) {

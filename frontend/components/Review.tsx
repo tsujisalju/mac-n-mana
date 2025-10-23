@@ -1,9 +1,8 @@
 import { ReviewData } from "@/lib/storage";
 import { useState } from "react";
 
-export default function Review({ cid }: { cid: string }) {
-  const [review, setReview] = useState<ReviewData>();
-  const [isLoading, setIsloading] = useState<boolean>(false);
+export default function Review() {
+  const [review] = useState<ReviewData>();
 
   return (
     <div className="flex flex-row p-4 border-2 border-base-300 rounded-md">

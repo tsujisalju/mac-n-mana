@@ -1,7 +1,7 @@
 // frontend/lib/blockscout.ts
 import { reviewRegistryConfig } from "./contracts/reviewRegistry";
 // Use the updated ReviewUpload type from storage.ts
-import { ReviewUpload, ReviewData, getReviewByCID } from "./storage";
+import { ReviewData, getReviewByCID } from "./storage";
 
 export function getImageUrlFromReviewCID(cid: string, imageName: string | undefined): string | null {
     if (!imageName) return null;
@@ -60,7 +60,7 @@ export interface Parameter {
     indexed: boolean;
     name: string;
     type: string;
-    value: string | any; // More flexible type
+    value: string;
 }
 
 export interface SmartContract {
