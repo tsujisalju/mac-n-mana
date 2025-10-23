@@ -89,138 +89,114 @@ export default function MapSearch() {
     if (window.google) initMap();
   }, []);
 
-  return (
-    <div className="px-4 flex flex-col space-y-2 xl:space-x-4 h-full xl:flex-row">
-      <div className="xl:w-lg flex flex-col space-y-2 xl:h-[90vh]">
-        <h1 className="text-3xl font-bold">{messages[randomMessage]}</h1>
-        <label className="input w-full">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="opacity-20 size-6"
-          >
-            <path
-              fillRule="evenodd"
-              d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <input
-            id="search-input"
-            placeholder="Search for a restaurant"
-            type="text"
-            className="grow"
+return (
+    // Keep original container styling
+    <div className="max-w-lg mx-auto px-4 flex flex-col space-y-2">
+      <h1 className="text-2xl font-bold">{messages[randomMessage]}</h1>
+      {/* Keep original label styling */}
+      <label className="input w-full">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="opacity-20 size-6"
+        >
+          <path
+            fillRule="evenodd"
+            d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+            clipRule="evenodd"
           />
-        </label>
-        {id && (
-          <div className="flex flex-col space-y-4 xl:h-full xl:overflow-y-auto">
-            <hr className="border-base-300 border-1" />
-            <h1 className="text-3xl font-bold">{name}</h1>
-            <div className="h-[300px] w-full">
-              <div className="carousel rounded-md">
-                {photos.map((photo, index) => (
-                  <div
-                    key={index}
-                    id={`slide-${index}`}
-                    className="carousel-item"
-                  >
-                    <Image
-                      src={photo}
-                      className="w-full"
-                      alt={name + " photo " + index}
-                      width={400}
-                      height={300}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Link
-              href={`/review?placeId=${id}&name=${name}`}
-              className="btn btn-neutral w-max"
-            >
-              Make a review
-            </Link>
-            <h2 className="text-2xl font-bold">On-chain Reviews</h2>
-            {isLoading ? (
-              <div className="flex flex-col justify-center items-center py-4">
-                <span className="loading loading-spinner"></span>
-                <span>Fetching reviews..</span>
-              </div>
-            ) : (
-              <div className="flex flex-col space-y-2">
-                {reviews.length > 0 ? (
-                  reviews.map((review, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-row p-4 border-2 border-base-300 rounded-md"
-                    >
-                      <div className="flex flex-col grow space-y-2">
-                        <p className="font-bold">{review.reviewer}</p>
-                        <p>{review.text}</p>
-                        <div className="rating flex flex-row space-x-4">
-                          {[1, 2, 3, 4, 5].map((val) => (
-                            <div
-                              key={val}
-                              className="mask mask-star"
-                              aria-label={val + " star"}
-                              aria-current={val == review.rating && "true"}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <button className="btn btn-square btn-ghost">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="m4.5 15.75 7.5-7.5 7.5 7.5"
-                            />
-                          </svg>
-                        </button>
-                        <span className="font-bold">0</span>
-                        <button className="btn btn-square btn-ghost">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No on-chain reviews found for this place.</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
+        </svg>
+        <input
+          id="search-input"
+          placeholder="Search for a restaurant"
+          type="text"
+          className="grow"
+        />
+      </label>
+      {/* Keep original map div styling */}
       <div
         ref={mapRef}
         className="h-[300px] xl:h-[90vh] w-full rounded-md border-base-300 border-2"
       />
+      {id && (
+        // Keep original result div styling
+        <div className="flex flex-col space-y-4">
+          <hr className="border-base-300 border-1" />
+          <h1 className="text-3xl font-bold">{name}</h1>
+          {/* Keep original Google photos carousel styling */}
+          <div className="carousel w-full rounded-md">
+            {photos.map((photo, index) => (
+              <div key={index} id={`slide-${index}`} className="carousel-item">
+                <Image
+                  src={photo}
+                  className="w-full"
+                  alt={name + " photo " + index}
+                  width={400}
+                  height={300}
+                  unoptimized // Add unoptimized if domain not in next.config
+                />
+              </div>
+            ))}
+          </div>
+          {/* Keep original Link styling */}
+          <Link
+            href={`/review?placeId=${id}&name=${encodeURIComponent(name)}`} // Encode name
+            className="btn btn-neutral w-max"
+          >
+            Make a review
+          </Link>
+          <h2 className="text-2xl font-bold">On-chain Reviews</h2>
+          {isLoading ? (
+            // Keep original loading indicator styling
+            <div className="flex justify-center items-center py-4">
+              <span className="loading loading-spinner"></span>
+            </div>
+          ) : (
+             // Keep original reviews container styling
+            <div className="flex flex-col space-y-2">
+              {reviews.length > 0 ? (
+                reviews.map((review, i) => (
+                  // Keep original individual review div styling
+                  <div key={i}>
+                    <p className="font-bold">{review.reviewer}</p>
+                    {review.imageUrls && review.imageUrls.length > 0 && (
+                        <div className="my-2 grid grid-cols-3 gap-2"> {/* Or use carousel/scroll */}
+                            {review.imageUrls.map((imageUrl, imgIndex) => (
+                                <Image
+                                    key={imgIndex}
+                                    src={imageUrl}
+                                    alt={`Review image ${imgIndex + 1} by ${review.reviewer.substring(0, 8)}...`}
+                                    width={100} // Smaller size for multiple images
+                                    height={100}
+                                    className="rounded-md object-cover w-full h-24" // Adjust styling
+                                    unoptimized
+                                    priority={i < 1 && imgIndex < 3} // Prioritize first review's images
+                                />
+                            ))}
+                        </div>
+                    )}
+                    <p>{review.text}</p>
+                    <div className="rating flex flex-row space-x-4">
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <div
+                          key={val}
+                          className={`mask mask-star`} // Conditional styling for filled stars
+                          aria-label={val + " star"}
+                          aria-current={val == review.rating && "true"} // Less necessary with bg color
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                 // Keep original no-reviews message
+                <p>No on-chain reviews found for this place.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

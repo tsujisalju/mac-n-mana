@@ -1,14 +1,17 @@
+// frontend/lib/storage.ts
 "use server";
 
 import { Signer } from "@storacha/client/principal/ed25519";
 import { StoreMemory } from "@storacha/client/stores";
 import { create } from "@storacha/client";
 import * as Proof from "@storacha/client/proof";
+import { File } from '@web-std/file';
 
 export interface ReviewData {
   reviewer: string;
   text: string;
   rating: number;
+  imageUrls?: string[];
 }
 
 export interface ReviewUpload {
@@ -16,20 +19,37 @@ export interface ReviewUpload {
   text: string | undefined;
   rating: number | undefined;
   tags?: string[];
+  imageFilenames?: string[]; // --- Changed to array ---
 }
 
-export async function uploadReviewToIPFS(review: ReviewUpload) {
+// --- Accept array of files ---
+export async function uploadReviewToIPFS(review: ReviewUpload, imageFiles: File[]) {
   const principal = Signer.parse(process.env.STORACHA_KEY ?? "");
   const store = new StoreMemory();
   const client = await create({ principal, store });
   const proof = await Proof.parse(process.env.STORACHA_PROOF ?? "");
   const space = await client.addSpace(proof);
   await client.setCurrentSpace(space.did());
-  const blob = new Blob([JSON.stringify(review)], {
+
+  let reviewDataToUpload: ReviewUpload = { ...review };
+  const filesToUpload: File[] = [];
+
+  if (imageFiles.length > 0) {
+      const imageFilenames = imageFiles.map(file => file.name);
+      reviewDataToUpload.imageFilenames = imageFilenames; // Store the array of names
+
+      // Add image files to the upload list
+      for (const imageFile of imageFiles) {
+          filesToUpload.push(new File([await imageFile.arrayBuffer()], imageFile.name, { type: imageFile.type }));
+      }
+  }
+  const reviewBlob = new Blob([JSON.stringify(reviewDataToUpload)], {
     type: "application/json",
   });
-  const files = [new File([blob], "review.json")];
-  const cid = await client.uploadDirectory(files);
+  filesToUpload.unshift(new File([reviewBlob], "review.json")); // Add review.json at the beginning
+
+  // Upload directory (will contain only review.json if no images)
+  const cid = await client.uploadDirectory(filesToUpload);
   const strCid = JSON.parse(JSON.stringify(cid))["/"].toString();
   return strCid;
 }
