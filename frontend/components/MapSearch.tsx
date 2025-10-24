@@ -111,7 +111,7 @@ export default function MapSearch() {
       if (!input) return; 
 
       const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ["cafe", "restaurant", "food", "bakery", "bar", "meal_delivery", "meal_takeaway"],
+        types: ["cafe", "restaurant", "food", "bakery", "bar"],
         fields: ["place_id", "name", "geometry", "photos"],
       });
       autocomplete.bindTo("bounds", map);
