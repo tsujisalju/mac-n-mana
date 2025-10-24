@@ -16,8 +16,8 @@ contract ReviewRegistry {
 
     mapping(address => int256) public userReputation; //track reputation score for each ReviewRegistry
 
-    event ReviewSubmitted(uint256 reviewId, address indexed reviewer, string placeId, string ipfsHash);
-    event ReviewVoted(uint256 reviewId, address indexed voter, int8 vote);
+    event ReviewSubmitted(uint256 reviewId, address indexed reviewer, string placeId, string ipfsHash, uint256 timestamp);
+    event ReviewVoted(uint256 reviewId, address indexed voter, int8 vote, uint256 timestamp);
 
     function submitReview(string memory placeId, string memory ipfsHash, uint8 rating) external {
         require(rating >= 1 && rating <= 5, "Invalid rating");
@@ -30,7 +30,7 @@ contract ReviewRegistry {
             reputationScore: 0
         });
 
-        emit ReviewSubmitted(reviewCount, msg.sender, placeId, ipfsHash);
+        emit ReviewSubmitted(reviewCount, msg.sender, placeId, ipfsHash, block.timestamp);
         reviewCount++;
     }
 
@@ -42,7 +42,7 @@ contract ReviewRegistry {
         review.reputationScore += vote;
         userReputation[review.reviewer] += vote;
 
-        emit ReviewVoted(reviewId, msg.sender, vote);
+        emit ReviewVoted(reviewId, msg.sender, vote, block.timestamp);
     }
 
     function getReview(uint256 reviewId) external view returns (Review memory) {
@@ -52,5 +52,9 @@ contract ReviewRegistry {
 
     function getUserReputation(address user) external view returns (int256) {
         return userReputation[user];
+    }
+
+    function getScore(uint256 reviewId) external view returns (int256) {
+        return reviews[reviewId].reputationScore;
     }
 }

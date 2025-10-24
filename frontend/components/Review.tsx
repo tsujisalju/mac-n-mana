@@ -1,5 +1,7 @@
 import { ReviewParams } from "@/lib/blockscout";
+import { getReviewScore, voteReview } from "@/lib/contractActions";
 import { getReviewDataByCID } from "@/lib/storage";
+import { showToast } from "@/lib/toast";
 import { truncateString } from "@/lib/truncate";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -8,7 +10,28 @@ export default function Review({ params }: { params: ReviewParams }) {
   const [text, setText] = useState<string | null>("");
   const [rating, setRating] = useState<number>(0);
   const [image, setImage] = useState<string>("");
+  const [score, setScore] = useState<bigint>(BigInt(0));
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleVote = async (reviewId: number, vote: 1 | -1) => {
+    try {
+      await voteReview(reviewId, vote);
+      showToast("You have voted for the review!", "success");
+    } catch (err) {
+      console.error("Vote failed:", err);
+      showToast("Could not vote for review. Please try again later.", "error");
+    } finally {
+    }
+  };
+
+  const getScore = async (reviewId: number) => {
+    try {
+      return await getReviewScore(reviewId);
+    } catch (err) {
+      console.error("Could not get review score:", err);
+    }
+    return BigInt(0);
+  };
 
   useEffect(() => {
     const getReview = async () => {
@@ -19,6 +42,8 @@ export default function Review({ params }: { params: ReviewParams }) {
         setText(review.text);
         setRating(review.rating);
         setImage(review.imageFilename ?? "");
+        const reviewScore = await getScore(Number(params.reviewId));
+        setScore(reviewScore);
       } catch (err) {
         console.error(
           `Failed to get review data on IPFS for cid ${params.ipfsHash}`,
@@ -30,7 +55,7 @@ export default function Review({ params }: { params: ReviewParams }) {
       }
     };
     getReview();
-  }, [params.ipfsHash]);
+  }, [params]);
 
   return (
     <div className="flex flex-row p-4 border-2 border-base-300 rounded-md">
@@ -67,7 +92,10 @@ export default function Review({ params }: { params: ReviewParams }) {
         </div>
       </div>
       <div className="flex flex-col items-center">
-        <button className="btn btn-square btn-ghost">
+        <button
+          className="btn btn-square btn-ghost"
+          onClick={() => handleVote(Number(params.reviewId), 1)}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -83,7 +111,7 @@ export default function Review({ params }: { params: ReviewParams }) {
             />
           </svg>
         </button>
-        <span className="font-bold">0</span>
+        <span className="font-bold">{Number(score).toString()}</span>
         <button className="btn btn-square btn-ghost">
           <svg
             xmlns="http://www.w3.org/2000/svg"
