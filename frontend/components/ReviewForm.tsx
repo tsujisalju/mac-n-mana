@@ -41,14 +41,11 @@ export default function ReviewForm() {
 
         if (totalFiles > MAX_PHOTOS) {
             showToast(`You can upload a maximum of ${MAX_PHOTOS} photos.`, "warning");
-            // Optionally, slice the newFiles array to only take enough to reach the limit
-            // newFiles = newFiles.slice(0, MAX_PHOTOS - imageFiles.length);
-            return; // Prevent adding more than the limit for simplicity
+            return;
         }
 
         setImageFiles(prevFiles => [...prevFiles, ...newFiles]);
 
-        // Generate previews for new files
         newFiles.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -57,7 +54,6 @@ export default function ReviewForm() {
             reader.readAsDataURL(file);
         });
     }
-     // Clear the input value so the same file can be selected again if removed
     event.target.value = '';
   };
 
@@ -75,11 +71,8 @@ export default function ReviewForm() {
         placeId: placeId,
         text: text,
         rating: rating,
-        // imageFilenames will be added in uploadReviewToIPFS
       };
-      // --- Pass the array of files ---
-      const cid = await uploadReviewToIPFS(reviewData, imageFiles); // Pass array
-      // --- End of change ---
+      const cid = await uploadReviewToIPFS(reviewData, imageFiles);
       console.log("Review submitted to IPFS:", cid);
       await submitReview(placeId, cid, rating);
       showToast("Your review has been submitted!", "success");
@@ -112,7 +105,6 @@ return (
           className="textarea textarea-bordered w-full"
           rows={6}
         />
-        {/* Hidden File Input - Add 'multiple' */}
         <input
           type="file"
           accept="image/*"
@@ -120,22 +112,19 @@ return (
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          multiple // Allow multiple file selection
+          multiple
         />
-
-        {/* Camera/Upload Button - Update text */}
         <button
           type="button"
           onClick={handleCameraClick}
           className="btn w-max"
-          disabled={isLoading || imageFiles.length >= MAX_PHOTOS} // Disable if max photos reached
+          disabled={isLoading || imageFiles.length >= MAX_PHOTOS}
         >
-          {imageFiles.length > 0 ? `Add Photo (${imageFiles.length}/${MAX_PHOTOS})` : "Add Photos (Optional)"} 📸
+          {imageFiles.length > 0 ? `Add Photo (${imageFiles.length}/${MAX_PHOTOS})` : "Add Photos"} 
         </button>
 
-        {/* --- Image Preview Area for Multiple Images --- */}
         {imagePreviews.length > 0 && (
-          <div className="mt-2 grid grid-cols-3 gap-2"> {/* Use a grid */}
+          <div className="mt-2 grid grid-cols-3 gap-2"> 
             {imagePreviews.map((previewUrl, index) => (
               <div key={index} className="relative group">
                 <Image
@@ -143,7 +132,7 @@ return (
                   alt={`Review preview ${index + 1}`}
                   width={100}
                   height={100}
-                  className="rounded-md object-cover w-full h-24" // Adjust size
+                  className="rounded-md object-cover w-full h-24" 
                 />
                 <button
                   type="button"
@@ -152,13 +141,12 @@ return (
                   aria-label={`Remove image ${index + 1}`}
                   disabled={isLoading}
                 >
-                  ✕ {/* Close icon */}
+                  ✕ 
                 </button>
               </div>
             ))}
           </div>
         )}
-        {/* --- End of Image Preview Area --- */}
 
         <label htmlFor="rating" className="font-bold">
           Rating
@@ -169,19 +157,17 @@ return (
               key={val}
               type="radio"
               name="rating"
-              className="mask mask-star-2 bg-orange-400"
+              className="mask mask-star-2 "
               checked={rating == val}
               onChange={() => setRating(val)}
               aria-label={`${val} stars`}
             />
           ))}
         </div>
-        {/* --- Update submit button disabled logic (photo no longer required) --- */}
-        <button type="submit" className="btn btn-primary w-max mt-4" disabled={isLoading}>
+        <button type="submit" className="btn btn-neutral w-max" disabled={isLoading}>
           {isLoading && <span className="loading loading-spinner"></span>}
           Submit Review
         </button>
-         {/* --- End of change --- */}
       </div>
     </form>
   );
