@@ -1,13 +1,17 @@
+// frontend/components/MapSearch.tsx
 "use client";
 
 import { fetchReviewParamsByPlaceId, ReviewParams } from "@/lib/blockscout";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 import Review from "./Review";
 
 export default function MapSearch() {
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
@@ -25,12 +29,16 @@ export default function MapSearch() {
 
   const { isConnected } = useAccount();
 
+  // Modified useEffect for disconnection: Clear search input value
   useEffect(() => {
     if (!isConnected) {
       setId("");
       setName("");
       setPhotos([]);
       setReviews([]);
+      if (searchInputRef.current) {
+        searchInputRef.current.value = "";
+      }
     }
   }, [isConnected]);
 
@@ -41,6 +49,7 @@ export default function MapSearch() {
   useEffect(() => {
     const fetchReview = async (placeId: string) => {
       setIsLoading(true);
+      setReviews([]);
       try {
         const data = await fetchReviewParamsByPlaceId(placeId);
         console.log(data);
@@ -54,40 +63,107 @@ export default function MapSearch() {
     if (id) fetchReview(id);
   }, [id]);
 
+  const handlePlaceSelect = useCallback((place: google.maps.places.PlaceResult) => {
+    if (
+      !place ||
+      !place.geometry ||
+      !place.place_id ||
+      !place.geometry.location
+    )
+      return;
+
+    // Update map view
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter(place.geometry.location);
+      mapInstanceRef.current.setZoom(17); 
+    }
+
+    setId(place.place_id);
+    const placeName = place.name ?? "Unidentified Place";
+    setName(placeName);
+
+    if (searchInputRef.current) {
+      searchInputRef.current.value = placeName;
+    }
+
+    const photosUrls = place.photos?.map((p) =>
+      p.getUrl({ maxWidth: 400, maxHeight: 300 }),
+    );
+    setPhotos(photosUrls ?? []);
+  }, []); 
+
   useEffect(() => {
     const initMap = () => {
-      const map = new google.maps.Map(mapRef.current!, {
-        center: { lat: 3.139, lng: 101.6869 }, //KL center
+      if (!mapRef.current) return;
+
+      const map = new google.maps.Map(mapRef.current, {
+        center: { lat: 3.139, lng: 101.6869 }, // KL center
         zoom: 14,
+        mapTypeControl: false, 
+        streetViewControl: false, 
       });
 
-      const input = document.getElementById("search-input") as HTMLInputElement;
+      mapInstanceRef.current = map;
+
+      placesServiceRef.current = new google.maps.places.PlacesService(map);
+
+      const input = searchInputRef.current;
+      if (!input) return; 
+
       const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ["restaurant"],
+        types: ["cafe", "restaurant", "food", "bakery", "bar", "meal_delivery", "meal_takeaway"],
+        fields: ["place_id", "name", "geometry", "photos"],
       });
       autocomplete.bindTo("bounds", map);
 
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        if (
-          !place ||
-          !place.geometry ||
-          !place.place_id ||
-          !place.geometry.location
-        )
-          return;
-        map.setCenter(place.geometry.location);
-        map.setZoom(20);
-        setId(place.place_id);
-        setName(place.name ?? "Unidentified Restaurant");
-        const photos = place.photos?.map((p) =>
-          p.getUrl({ maxWidth: 400, maxHeight: 300 }),
-        );
-        setPhotos(photos ?? []);
+        handlePlaceSelect(place); 
+      });
+
+      map.addListener('click', (mapsMouseEvent: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
+        const placeId = (mapsMouseEvent as google.maps.IconMouseEvent).placeId;
+
+        if (placeId && placesServiceRef.current) {
+           if ('stop' in mapsMouseEvent && typeof mapsMouseEvent.stop === 'function') {
+             mapsMouseEvent.stop();
+           }
+
+          placesServiceRef.current.getDetails({
+            placeId: placeId,
+            fields: ["place_id", "name", "geometry", "photos", "types"]
+          }, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+              const allowedTypes = ["cafe", "restaurant", "food", "bakery", "bar", "meal_delivery", "meal_takeaway"];
+              const placeTypes = place.types || [];
+              const isAllowedType = placeTypes.some(type => allowedTypes.includes(type));
+
+              if (isAllowedType) {
+                 handlePlaceSelect(place); 
+              } else {
+                console.log("Clicked place is not a relevant food place:", place.name, place.types);
+              }
+            } else {
+              console.error("PlacesService failed:", status);
+            }
+          });
+        }
       });
     };
-    if (window.google) initMap();
-  }, []);
+
+    if (window.google && window.google.maps && window.google.maps.places) {
+      initMap();
+    } else {
+      const intervalId = setInterval(() => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          initMap();
+          clearInterval(intervalId);
+        }
+      }, 100); 
+      return () => clearInterval(intervalId); 
+    }
+  }, [handlePlaceSelect]);
+
 
   return (
     <div className="px-4 flex flex-col space-y-2 xl:space-x-4 h-full xl:flex-row">
@@ -108,6 +184,7 @@ export default function MapSearch() {
           </svg>
           <input
             id="search-input"
+            ref={searchInputRef}
             placeholder="Search for a restaurant"
             type="text"
             className="grow"
@@ -117,26 +194,28 @@ export default function MapSearch() {
           <div className="flex flex-col space-y-4 xl:h-[90vh] xl:overflow-y-auto">
             <hr className="border-base-300 border-1" />
             <h1 className="text-3xl font-bold">{name}</h1>
-            <div className="h-[300px">
-              <div className="carousel rounded-md">
-                {photos.map((photo, index) => (
-                  <div
-                    key={index}
-                    id={`slide-${index}`}
-                    className="carousel-item"
-                  >
-                    <Image
-                      src={photo}
-                      className="w-full"
-                      alt={name + " photo " + index}
-                      width={400}
-                      height={300}
-                      unoptimized
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            {photos.length > 0 && (
+                <div className="h-[300px]">
+                    <div className="carousel rounded-md">
+                        {photos.map((photo, index) => (
+                            <div
+                                key={index}
+                                id={`slide-${index}`}
+                                className="carousel-item"
+                            >
+                                <Image
+                                    src={photo}
+                                    className="w-full"
+                                    alt={name + " photo " + index}
+                                    width={400}
+                                    height={300}
+                                    unoptimized
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             <Link
               href={`/review?placeId=${id}&name=${encodeURIComponent(name)}`} // Encode name
               className="btn btn-neutral w-max"
