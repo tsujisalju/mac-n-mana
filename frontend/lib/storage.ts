@@ -5,13 +5,14 @@ import { Signer } from "@storacha/client/principal/ed25519";
 import { StoreMemory } from "@storacha/client/stores";
 import { create } from "@storacha/client";
 import * as Proof from "@storacha/client/proof";
-import { File } from '@web-std/file';
+import { File } from "@web-std/file";
 
 export interface ReviewData {
   reviewer: string;
   text: string;
   rating: number;
   imageUrls?: string[];
+  imageFilename?: string;
 }
 
 export interface ReviewUpload {
@@ -19,11 +20,13 @@ export interface ReviewUpload {
   text: string | undefined;
   rating: number | undefined;
   tags?: string[];
-  imageFilenames?: string[]; // --- Changed to array ---
+  imageFilenames?: string[];
 }
 
-// --- Accept array of files ---
-export async function uploadReviewToIPFS(review: ReviewUpload, imageFiles: File[]) {
+export async function uploadReviewToIPFS(
+  review: ReviewUpload,
+  imageFiles: File[],
+) {
   const principal = Signer.parse(process.env.STORACHA_KEY ?? "");
   const store = new StoreMemory();
   const client = await create({ principal, store });
@@ -35,13 +38,17 @@ export async function uploadReviewToIPFS(review: ReviewUpload, imageFiles: File[
   const filesToUpload: File[] = [];
 
   if (imageFiles.length > 0) {
-      const imageFilenames = imageFiles.map(file => file.name);
-      reviewDataToUpload.imageFilenames = imageFilenames; // Store the array of names
+    const imageFilenames = imageFiles.map((file) => file.name);
+    reviewDataToUpload.imageFilenames = imageFilenames; // Store the array of names
 
-      // Add image files to the upload list
-      for (const imageFile of imageFiles) {
-          filesToUpload.push(new File([await imageFile.arrayBuffer()], imageFile.name, { type: imageFile.type }));
-      }
+    // Add image files to the upload list
+    for (const imageFile of imageFiles) {
+      filesToUpload.push(
+        new File([await imageFile.arrayBuffer()], imageFile.name, {
+          type: imageFile.type,
+        }),
+      );
+    }
   }
   const reviewBlob = new Blob([JSON.stringify(reviewDataToUpload)], {
     type: "application/json",
@@ -54,20 +61,31 @@ export async function uploadReviewToIPFS(review: ReviewUpload, imageFiles: File[
   return strCid;
 }
 
-export async function getReviewByCID(cid: string) {
-  try {
-    const url = "https://" + cid + ".ipfs.w3s.link/review.json";
-    console.log("Retrieving review via", url);
-    const res = await fetch(url);
-    const review: ReviewUpload = await res.json();
-    return review;
-  } catch (err) {
-    console.error("Error when fetching review " + cid, err);
-    const empty: ReviewUpload = {
-      placeId: undefined,
-      text: undefined,
-      rating: 0,
-    };
-    return empty;
+export async function getReviewDataByCID(cid: string, maxRetries = 3) {
+  const gateways = [
+    `https://${cid}.ipfs.w3s.link/review.json`,
+    `https://${cid}.ipfs.storacha.link/review.json`,
+  ];
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (const url of gateways) {
+      try {
+        console.log(`Attempt ${attempt + 1}: Fetching review from ${url}`);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const review: ReviewData = await res.json();
+        return review;
+      } catch (err) {
+        console.warn(`Failed to fetch from ${url}`, err);
+        await new Promise((r) => setTimeout(r, 500)); // wait 500 ms before retrying
+      }
+    }
   }
+  console.error(`All attempts failed for CID ${cid}`);
+  const empty: ReviewData = {
+    reviewer: "Unknown reviewer",
+    text: "Unknown review",
+    rating: 0,
+    imageUrls: [],
+  };
+  return empty;
 }
