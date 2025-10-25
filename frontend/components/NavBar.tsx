@@ -23,13 +23,13 @@ export default function NavBar() {
   }, [address, isConnected]);
 
   return (
-    <div className="p-4 flex flex-row justify-between items-center">
+    <div className="p-4 flex flex-row justify-between space-x-6 items-center">
       <div className="flex flex-row space-x-2 items-center">
         <span>🍔</span>
         <Logo className="h-8" />
       </div>
-      <div className="flex flex-row space-x-4 items-center">
-        <div className="flex flex-row space-x-2">
+      <div className="flex flex-row space-x-2 items-center">
+        <div className="flex flex-row space-x-1">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

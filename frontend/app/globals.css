@@ -13,3 +13,13 @@
 @theme inline {
   --font-sans: var(--font-onest), "sans-serif";
 }
+
+@media (max-width: 768px) {
+  button[data-testid="rk-chain-button"] > svg:last-child {
+    display: none !important;
+  }
+
+  button[data-testid="rk-account-button"] svg:last-of-type {
+    display: none !important;
+  }
+}
