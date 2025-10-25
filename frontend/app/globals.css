@@ -23,3 +23,9 @@
     display: none !important;
   }
 }
+
+button[data-testid="rk-account-button"] > div > div:last-child > div:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
