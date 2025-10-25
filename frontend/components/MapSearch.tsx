@@ -22,6 +22,7 @@ export default function MapSearch() {
   const [reviews, setReviews] = useState<ReviewParams[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [randomMessage, setRandomMessage] = useState<number>(0);
+  const [mapReady, setMapReady] = useState<boolean>(false);
 
   const messages = [
     "Ate somewhere awesome today?",
@@ -101,26 +102,32 @@ export default function MapSearch() {
   );
 
   useEffect(() => {
-    if (paramsPlaceId && placesServiceRef.current && mapInstanceRef.current) {
-      placesServiceRef.current.getDetails(
-        {
-          placeId: paramsPlaceId,
-          fields: ["place_id", "name", "geometry", "photos", "types"],
-        },
-        (place, status) => {
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            place &&
-            place.geometry
-          ) {
-            handlePlaceSelect(place); // reuse your existing logic
-          } else {
-            console.warn("Failed to hydrate place from placeId:", status);
-          }
+    if (
+      !mapReady ||
+      !paramsPlaceId ||
+      !placesServiceRef.current ||
+      !mapInstanceRef.current
+    )
+      return;
+
+    placesServiceRef.current.getDetails(
+      {
+        placeId: paramsPlaceId,
+        fields: ["place_id", "name", "geometry", "photos", "types"],
+      },
+      (place, status) => {
+        if (
+          status === google.maps.places.PlacesServiceStatus.OK &&
+          place &&
+          place.geometry
+        ) {
+          handlePlaceSelect(place);
+        } else {
+          console.warn("Failed to hydrate place from placeId:", status);
         }
-      );
-    }
-  }, [paramsPlaceId, handlePlaceSelect]);
+      }
+    );
+  }, [mapReady, paramsPlaceId, handlePlaceSelect]);
 
   useEffect(() => {
     const initMap = () => {
@@ -208,6 +215,7 @@ export default function MapSearch() {
           }
         }
       );
+      setMapReady(true);
     };
 
     if (window.google && window.google.maps && window.google.maps.places) {
