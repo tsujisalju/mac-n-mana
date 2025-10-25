@@ -7,10 +7,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 import Review from "./Review";
+import { useSearchParams } from "next/navigation";
 
 export default function MapSearch() {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
+    null
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const [id, setId] = useState("");
@@ -28,6 +31,8 @@ export default function MapSearch() {
   ];
 
   const { isConnected } = useAccount();
+  const searchParams = useSearchParams();
+  const paramsPlaceId = searchParams.get("placeId");
 
   // Modified useEffect for disconnection: Clear search input value
   useEffect(() => {
@@ -63,34 +68,59 @@ export default function MapSearch() {
     if (id) fetchReview(id);
   }, [id]);
 
-  const handlePlaceSelect = useCallback((place: google.maps.places.PlaceResult) => {
-    if (
-      !place ||
-      !place.geometry ||
-      !place.place_id ||
-      !place.geometry.location
-    )
-      return;
+  const handlePlaceSelect = useCallback(
+    (place: google.maps.places.PlaceResult) => {
+      if (
+        !place ||
+        !place.geometry ||
+        !place.place_id ||
+        !place.geometry.location
+      )
+        return;
 
-    // Update map view
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter(place.geometry.location);
-      mapInstanceRef.current.setZoom(17); 
+      // Update map view
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setCenter(place.geometry.location);
+        mapInstanceRef.current.setZoom(17);
+      }
+
+      setId(place.place_id);
+      const placeName = place.name ?? "Unidentified Place";
+      setName(placeName);
+
+      if (searchInputRef.current) {
+        searchInputRef.current.value = placeName;
+      }
+
+      const photosUrls = place.photos?.map((p) =>
+        p.getUrl({ maxWidth: 400, maxHeight: 300 })
+      );
+      setPhotos(photosUrls ?? []);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (paramsPlaceId && placesServiceRef.current && mapInstanceRef.current) {
+      placesServiceRef.current.getDetails(
+        {
+          placeId: paramsPlaceId,
+          fields: ["place_id", "name", "geometry", "photos", "types"],
+        },
+        (place, status) => {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            place &&
+            place.geometry
+          ) {
+            handlePlaceSelect(place); // reuse your existing logic
+          } else {
+            console.warn("Failed to hydrate place from placeId:", status);
+          }
+        }
+      );
     }
-
-    setId(place.place_id);
-    const placeName = place.name ?? "Unidentified Place";
-    setName(placeName);
-
-    if (searchInputRef.current) {
-      searchInputRef.current.value = placeName;
-    }
-
-    const photosUrls = place.photos?.map((p) =>
-      p.getUrl({ maxWidth: 400, maxHeight: 300 }),
-    );
-    setPhotos(photosUrls ?? []);
-  }, []); 
+  }, [paramsPlaceId, handlePlaceSelect]);
 
   useEffect(() => {
     const initMap = () => {
@@ -99,8 +129,8 @@ export default function MapSearch() {
       const map = new google.maps.Map(mapRef.current, {
         center: { lat: 3.139, lng: 101.6869 }, // KL center
         zoom: 14,
-        mapTypeControl: false, 
-        streetViewControl: false, 
+        mapTypeControl: false,
+        streetViewControl: false,
       });
 
       mapInstanceRef.current = map;
@@ -108,7 +138,7 @@ export default function MapSearch() {
       placesServiceRef.current = new google.maps.places.PlacesService(map);
 
       const input = searchInputRef.current;
-      if (!input) return; 
+      if (!input) return;
 
       const autocomplete = new google.maps.places.Autocomplete(input, {
         types: ["cafe", "restaurant", "food", "bakery", "bar"],
@@ -118,37 +148,66 @@ export default function MapSearch() {
 
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        handlePlaceSelect(place); 
+        handlePlaceSelect(place);
       });
 
-      map.addListener('click', (mapsMouseEvent: google.maps.MapMouseEvent | google.maps.IconMouseEvent) => {
-        const placeId = (mapsMouseEvent as google.maps.IconMouseEvent).placeId;
+      map.addListener(
+        "click",
+        (
+          mapsMouseEvent: google.maps.MapMouseEvent | google.maps.IconMouseEvent
+        ) => {
+          const placeId = (mapsMouseEvent as google.maps.IconMouseEvent)
+            .placeId;
 
-        if (placeId && placesServiceRef.current) {
-           if ('stop' in mapsMouseEvent && typeof mapsMouseEvent.stop === 'function') {
-             mapsMouseEvent.stop();
-           }
-
-          placesServiceRef.current.getDetails({
-            placeId: placeId,
-            fields: ["place_id", "name", "geometry", "photos", "types"]
-          }, (place, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-              const allowedTypes = ["cafe", "restaurant", "food", "bakery", "bar", "meal_delivery", "meal_takeaway"];
-              const placeTypes = place.types || [];
-              const isAllowedType = placeTypes.some(type => allowedTypes.includes(type));
-
-              if (isAllowedType) {
-                 handlePlaceSelect(place); 
-              } else {
-                console.log("Clicked place is not a relevant food place:", place.name, place.types);
-              }
-            } else {
-              console.error("PlacesService failed:", status);
+          if (placeId && placesServiceRef.current) {
+            if (
+              "stop" in mapsMouseEvent &&
+              typeof mapsMouseEvent.stop === "function"
+            ) {
+              mapsMouseEvent.stop();
             }
-          });
+
+            placesServiceRef.current.getDetails(
+              {
+                placeId: placeId,
+                fields: ["place_id", "name", "geometry", "photos", "types"],
+              },
+              (place, status) => {
+                if (
+                  status === google.maps.places.PlacesServiceStatus.OK &&
+                  place
+                ) {
+                  const allowedTypes = [
+                    "cafe",
+                    "restaurant",
+                    "food",
+                    "bakery",
+                    "bar",
+                    "meal_delivery",
+                    "meal_takeaway",
+                  ];
+                  const placeTypes = place.types || [];
+                  const isAllowedType = placeTypes.some((type) =>
+                    allowedTypes.includes(type)
+                  );
+
+                  if (isAllowedType) {
+                    handlePlaceSelect(place);
+                  } else {
+                    console.log(
+                      "Clicked place is not a relevant food place:",
+                      place.name,
+                      place.types
+                    );
+                  }
+                } else {
+                  console.error("PlacesService failed:", status);
+                }
+              }
+            );
+          }
         }
-      });
+      );
     };
 
     if (window.google && window.google.maps && window.google.maps.places) {
@@ -159,11 +218,10 @@ export default function MapSearch() {
           initMap();
           clearInterval(intervalId);
         }
-      }, 100); 
-      return () => clearInterval(intervalId); 
+      }, 100);
+      return () => clearInterval(intervalId);
     }
   }, [handlePlaceSelect]);
-
 
   return (
     <div className="px-4 flex flex-col space-y-2 xl:space-x-4 h-full xl:flex-row">
@@ -195,26 +253,26 @@ export default function MapSearch() {
             <hr className="border-base-300 border-1" />
             <h1 className="text-3xl font-bold">{name}</h1>
             {photos.length > 0 && (
-                <div className="h-[300px]">
-                    <div className="carousel rounded-md">
-                        {photos.map((photo, index) => (
-                            <div
-                                key={index}
-                                id={`slide-${index}`}
-                                className="carousel-item"
-                            >
-                                <Image
-                                    src={photo}
-                                    className="w-full"
-                                    alt={name + " photo " + index}
-                                    width={400}
-                                    height={300}
-                                    unoptimized
-                                />
-                            </div>
-                        ))}
+              <div className="h-[300px]">
+                <div className="carousel rounded-md">
+                  {photos.map((photo, index) => (
+                    <div
+                      key={index}
+                      id={`slide-${index}`}
+                      className="carousel-item"
+                    >
+                      <Image
+                        src={photo}
+                        className="w-full"
+                        alt={name + " photo " + index}
+                        width={400}
+                        height={300}
+                        unoptimized
+                      />
                     </div>
+                  ))}
                 </div>
+              </div>
             )}
             <Link
               href={`/review?placeId=${id}&name=${encodeURIComponent(name)}`} // Encode name
