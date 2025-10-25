@@ -3,7 +3,6 @@ import { getReviewScore, voteReview } from "@/lib/contractActions";
 import { getReviewDataByCID } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { truncateString } from "@/lib/truncate";
-import { url } from "inspector";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 

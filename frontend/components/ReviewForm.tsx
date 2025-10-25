@@ -149,7 +149,7 @@ export default function ReviewForm() {
             {uploadStage === "completed" && (
               <>
                 <h3 className="font-bold text-lg">Review Submitted</h3>
-                <p>Thank you for contributing to Mac n' Mana!</p>
+                <p>Thank you for contributing to Mac n&apos; Mana!</p>
                 <div className="modal-action">
                   <form method="dialog">
                     <button className="btn" onClick={handleReturnToMap}>
