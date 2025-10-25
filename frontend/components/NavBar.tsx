@@ -48,7 +48,10 @@ export default function NavBar() {
         </div>
         <ConnectButton
           accountStatus={"address"}
-          chainStatus={"icon"}
+          chainStatus={{
+            smallScreen: 'none',
+            largeScreen: 'icon',
+          }}
           showBalance={false}
         />
       </div>
