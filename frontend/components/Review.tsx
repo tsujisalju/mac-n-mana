@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 export default function Review({ params }: { params: ReviewParams }) {
   const [text, setText] = useState<string | null>("");
   const [rating, setRating] = useState<number>(0);
-  const [image, setImage] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
   const [score, setScore] = useState<bigint>(BigInt(0));
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -41,13 +41,13 @@ export default function Review({ params }: { params: ReviewParams }) {
         console.log(params.ipfsHash, review);
         setText(review.text);
         setRating(review.rating);
-        setImage(review.imageFilename ?? "");
+        setImages(review.imageFilenames ?? []);
         const reviewScore = await getScore(Number(params.reviewId));
         setScore(reviewScore);
       } catch (err) {
         console.error(
           `Failed to get review data on IPFS for cid ${params.ipfsHash}`,
-          err,
+          err
         );
         setText("");
       } finally {
@@ -61,18 +61,20 @@ export default function Review({ params }: { params: ReviewParams }) {
     <div className="flex flex-row p-4 border-2 border-base-300 rounded-md">
       <div className="flex flex-col grow space-y-2">
         <p className="font-bold">{truncateString(params.reviewer)}</p>
-        {image && (
+        {images.length > 0 && (
           <div className="carousel w-full h-[100px] rounded-md">
-            <div className="carousel-item">
-              <Image
-                src={`https://${params.ipfsHash}.ipfs.dweb.link/${image}`}
-                className="w-full"
-                alt={"review photo"}
-                width={100}
-                height={100}
-                unoptimized
-              />
-            </div>
+            {images.map((fileName, i) => (
+              <div key={i} className="carousel-item">
+                <Image
+                  src={`https://${params.ipfsHash}.ipfs.dweb.link/${fileName}`}
+                  className="w-full"
+                  alt={"review photo"}
+                  width={100}
+                  height={100}
+                  unoptimized
+                />
+              </div>
+            ))}
           </div>
         )}
         {!isLoading ? (

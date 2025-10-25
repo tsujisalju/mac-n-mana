@@ -12,7 +12,7 @@ export interface ReviewData {
   text: string;
   rating: number;
   imageUrls?: string[];
-  imageFilename?: string;
+  imageFilenames?: string[];
 }
 
 export interface ReviewUpload {
@@ -25,7 +25,7 @@ export interface ReviewUpload {
 
 export async function uploadReviewToIPFS(
   review: ReviewUpload,
-  imageFiles: File[],
+  imageFiles: File[]
 ) {
   const principal = Signer.parse(process.env.STORACHA_KEY ?? "");
   const store = new StoreMemory();
@@ -46,7 +46,7 @@ export async function uploadReviewToIPFS(
       filesToUpload.push(
         new File([await imageFile.arrayBuffer()], imageFile.name, {
           type: imageFile.type,
-        }),
+        })
       );
     }
   }
