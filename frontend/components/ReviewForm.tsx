@@ -10,7 +10,7 @@ import Link from "next/link";
 
 const MAX_PHOTOS = 10;
 
-type UploadStage =
+export type UploadStage =
   | "idle"
   | "uploadingIPFS"
   | "awaitingTx"
@@ -59,7 +59,7 @@ export default function ReviewForm() {
       if (totalFiles > MAX_PHOTOS) {
         showToast(
           `You can upload a maximum of ${MAX_PHOTOS} photos.`,
-          "warning"
+          "warning",
         );
         return;
       }
@@ -82,10 +82,10 @@ export default function ReviewForm() {
 
   const removeImage = (indexToRemove: number) => {
     setImageFiles((prevFiles) =>
-      prevFiles.filter((_, index) => index !== indexToRemove)
+      prevFiles.filter((_, index) => index !== indexToRemove),
     );
     setImagePreviews((prevPreviews) =>
-      prevPreviews.filter((_, index) => index !== indexToRemove)
+      prevPreviews.filter((_, index) => index !== indexToRemove),
     );
   };
 
@@ -95,7 +95,7 @@ export default function ReviewForm() {
       placeId,
       text,
       rating,
-      `${imageFiles.length} photos`
+      `${imageFiles.length} photos`,
     );
     setShowModal(true);
     try {

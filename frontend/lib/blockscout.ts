@@ -87,12 +87,59 @@ export interface SmartContract {
   watchlist_names: unknown[];
 }
 
+const getReviewLogs = `https://eth-sepolia.blockscout.com/api/v2/addresses/${reviewRegistryConfig.address}/logs`;
+
+export async function fetchReviewParamByReviewId(
+  reviewId: number | string,
+): Promise<ReviewParams> {
+  const id = reviewId.toString();
+  const res = await fetch(getReviewLogs);
+  if (!res.ok) {
+    console.error(
+      "Failed to fetch logs from Blockscout:",
+      res.status,
+      res.statusText,
+    );
+    return {
+      reviewId: "",
+      reviewer: "",
+      placeId: "",
+      ipfsHash: "",
+    };
+  }
+  const data: EventLogs = await res.json();
+  for (const event of data.items) {
+    if (!event.decoded || !Array.isArray(event.decoded.parameters)) {
+      continue;
+    }
+    const methodId = event.decoded.method_id;
+    if (methodId != "352ee8b6") {
+      continue;
+    }
+    const params = event.decoded.parameters;
+    if (params.some((p) => p.name == "reviewId" && p.value == id)) {
+      const reviewParams: ReviewParams = {
+        reviewId: params.find((p) => p.name === "reviewId")?.value ?? "",
+        reviewer: params.find((p) => p.name === "reviewer")?.value ?? "",
+        placeId: params.find((p) => p.name === "placeId")?.value ?? "",
+        ipfsHash: params.find((p) => p.name === "ipfsHash")?.value ?? "",
+      };
+      return reviewParams;
+    }
+  }
+  console.error("No review found with this id.");
+  return {
+    reviewId: "",
+    reviewer: "",
+    placeId: "",
+    ipfsHash: "",
+  };
+}
+
 export async function fetchReviewParamsByPlaceId(
   placeId: string,
 ): Promise<ReviewParams[]> {
-  const res = await fetch(
-    `https://eth-sepolia.blockscout.com/api/v2/addresses/${reviewRegistryConfig.address}/logs`,
-  );
+  const res = await fetch(getReviewLogs);
   if (!res.ok) {
     console.error(
       "Failed to fetch logs from Blockscout:",
