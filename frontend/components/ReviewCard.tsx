@@ -1,13 +1,18 @@
-import { ReviewParams } from "@/lib/blockscout";
-import { getReviewScore, voteReview } from "@/lib/contractActions";
+import { ReplyParams, ReviewParams, useEvents } from "@/lib/blockscout";
+import {
+  getReplyCount,
+  getReviewScore,
+  voteReview,
+} from "@/lib/contractActions";
 import { getReviewDataByCID } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { truncateString } from "@/lib/truncate";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ReplyCard from "./ReplyCard";
 
-export default function Review({
+export default function ReviewCard({
   params,
   disableVote,
 }: {
@@ -19,6 +24,10 @@ export default function Review({
   const [images, setImages] = useState<string[]>([]);
   const [score, setScore] = useState<bigint>(BigInt(0));
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { fetchRepliesByReviewId } = useEvents();
+  const [replyCount, setReplyCount] = useState<number>(0);
+  const [replies, setReplies] = useState<ReplyParams[]>([]);
+  const [showReplies, setShowReplies] = useState<boolean>(false);
 
   const handleVote = async (reviewId: number, vote: 1 | -1) => {
     try {
@@ -45,12 +54,15 @@ export default function Review({
       setIsLoading(true);
       try {
         const review = await getReviewDataByCID(params.ipfsHash);
+        const reviewScore = await getScore(Number(params.reviewId));
+        const replyData = await fetchRepliesByReviewId(Number(params.reviewId));
         console.log(params.ipfsHash, review);
         setText(review.text);
         setRating(review.rating);
         setImages(review.imageFilenames ?? []);
-        const reviewScore = await getScore(Number(params.reviewId));
         setScore(reviewScore);
+        setReplyCount(replies.length);
+        setReplies(replyData);
       } catch (err) {
         console.error(
           `Failed to get review data on IPFS for cid ${params.ipfsHash}`,
@@ -62,7 +74,7 @@ export default function Review({
       }
     };
     getReview();
-  }, [params]);
+  }, [params, fetchRepliesByReviewId, replies.length]);
 
   return (
     <div className="flex flex-col p-4 border-2 border-base-300 rounded-md">
@@ -146,13 +158,28 @@ export default function Review({
         </div>
       </div>
       {!disableVote && (
-        <div className="flex flex-row justify-end">
+        <div className="mt-4 flex flex-row justify-between items-center">
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              setShowReplies((prev) => !prev);
+            }}
+          >
+            {replyCount} Replies
+          </button>
           <Link
             className="btn btn-ghost"
             href={`reply?placeId=${params.placeId}&reviewId=${params.reviewId}`}
           >
             Reply
           </Link>
+        </div>
+      )}
+      {showReplies && (
+        <div className="mt-4 flex flex-col pl-8 space-y-4">
+          {replies.map((reply, index) => (
+            <ReplyCard key={index} params={reply} />
+          ))}
         </div>
       )}
     </div>

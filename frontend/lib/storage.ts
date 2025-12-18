@@ -23,9 +23,32 @@ export interface ReviewUpload {
   imageFilenames?: string[];
 }
 
+export interface ReplyUpload {
+  reviewId: string | undefined;
+  text: string | undefined;
+}
+
+export async function uploadReplyToIPFS(reply: ReplyUpload) {
+  const principal = Signer.parse(process.env.STORACHA_KEY ?? "");
+  const store = new StoreMemory();
+  const client = await create({ principal, store });
+  const proof = await Proof.parse(process.env.STORACHA_PROOF ?? "");
+  const space = await client.addSpace(proof);
+  await client.setCurrentSpace(space.did());
+
+  const replyDataToUpload: ReplyUpload = { ...reply };
+  const replyBlob = new Blob([JSON.stringify(replyDataToUpload)], {
+    type: "application/json",
+  });
+  const filesToUpload: File[] = [new File([replyBlob], "reply.json")];
+  const cid = await client.uploadDirectory(filesToUpload);
+  const strCid = JSON.parse(JSON.stringify(cid))["/"].toString();
+  return strCid;
+}
+
 export async function uploadReviewToIPFS(
   review: ReviewUpload,
-  imageFiles: File[]
+  imageFiles: File[],
 ) {
   const principal = Signer.parse(process.env.STORACHA_KEY ?? "");
   const store = new StoreMemory();
@@ -46,7 +69,7 @@ export async function uploadReviewToIPFS(
       filesToUpload.push(
         new File([await imageFile.arrayBuffer()], imageFile.name, {
           type: imageFile.type,
-        })
+        }),
       );
     }
   }
@@ -59,6 +82,35 @@ export async function uploadReviewToIPFS(
   const cid = await client.uploadDirectory(filesToUpload);
   const strCid = JSON.parse(JSON.stringify(cid))["/"].toString();
   return strCid;
+}
+
+export async function getReplyDataByCID(cid: string, maxRetries = 3) {
+  const gateways = [
+    `https://${cid}.ipfs.w3s.link/reply.json`,
+    `https://${cid}.ipfs.storacha.link/reply.json`,
+  ];
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (const url of gateways) {
+      try {
+        console.log(`Attempt ${attempt + 1}: Fetching review from ${url}`);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const review: ReviewData = await res.json();
+        return review;
+      } catch (err) {
+        console.warn(`Failed to fetch from ${url}`, err);
+        await new Promise((r) => setTimeout(r, 500)); // wait 500 ms before retrying
+      }
+    }
+  }
+  console.error(`All attempts failed for CID ${cid}`);
+  const empty: ReviewData = {
+    reviewer: "Unknown reviewer",
+    text: "Unknown review",
+    rating: 0,
+    imageUrls: [],
+  };
+  return empty;
 }
 
 export async function getReviewDataByCID(cid: string, maxRetries = 3) {
