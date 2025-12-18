@@ -5,6 +5,7 @@ import Logo from "./Logo";
 import { useEffect, useState } from "react";
 import { getUserReputation } from "@/lib/contractActions";
 import { useAccount } from "wagmi";
+import Link from "next/link";
 
 export default function NavBar() {
   const { address, isConnected } = useAccount();
@@ -24,12 +25,12 @@ export default function NavBar() {
 
   return (
     <div className="p-4 flex flex-row justify-between space-x-6 items-center">
-      <div className="flex flex-row space-x-2 items-center">
+      <Link className="flex flex-row space-x-2 items-center" href="/">
         <span>🍔</span>
         <Logo className="h-8" />
-      </div>
+      </Link>
       <div className="flex flex-row space-x-2 items-center">
-        <div className="flex flex-row space-x-1">
+        <Link className="btn btn-accent" href="/profile">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -45,12 +46,12 @@ export default function NavBar() {
             />
           </svg>
           <span>{reputation}</span>
-        </div>
+        </Link>
         <ConnectButton
           accountStatus={"address"}
           chainStatus={{
-            smallScreen: 'none',
-            largeScreen: 'icon',
+            smallScreen: "none",
+            largeScreen: "icon",
           }}
           showBalance={false}
         />

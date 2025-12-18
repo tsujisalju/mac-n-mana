@@ -103,11 +103,11 @@ export default function UserProfile() {
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">Your Reviews</h2>
-          
+
           {reviews.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-lg opacity-70">
-                You haven't written any reviews yet
+                You haven$apos;t written any reviews yet
               </p>
               <p className="text-sm opacity-50 mt-2">
                 Start sharing your dining experiences!
@@ -130,7 +130,7 @@ export default function UserProfile() {
                           Place ID: {review.placeId}
                         </p>
                       </div>
-                      
+
                       {/* Rating Display */}
                       <div className="badge badge-primary badge-lg">
                         ⭐ {review.rating}/5
@@ -141,11 +141,13 @@ export default function UserProfile() {
                     <div className="flex items-center gap-4 mt-2">
                       <div className="stat p-0">
                         <div className="stat-title text-xs">Review Score</div>
-                        <div className={`stat-value text-2xl ${
-                          Number(review.reputationScore) >= 0 
-                            ? "text-success" 
-                            : "text-error"
-                        }`}>
+                        <div
+                          className={`stat-value text-2xl ${
+                            Number(review.reputationScore) >= 0
+                              ? "text-success"
+                              : "text-error"
+                          }`}
+                        >
                           {Number(review.reputationScore) >= 0 ? "+" : ""}
                           {review.reputationScore.toString()}
                         </div>
@@ -155,7 +157,7 @@ export default function UserProfile() {
                     {/* Timestamp */}
                     <p className="text-xs opacity-50 mt-2">
                       {new Date(
-                        Number(review.timestamp) * 1000
+                        Number(review.timestamp) * 1000,
                       ).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -181,15 +183,15 @@ export default function UserProfile() {
               ))}
             </div>
           )}
-          
+
           <div className="divider"></div>
-          
+
           <div className="stats stats-vertical lg:stats-horizontal shadow">
             <div className="stat">
               <div className="stat-title">Total Reviews</div>
               <div className="stat-value">{reviews.length}</div>
             </div>
-            
+
             <div className="stat">
               <div className="stat-title">Average Rating</div>
               <div className="stat-value">
@@ -201,13 +203,13 @@ export default function UserProfile() {
                   : "0"}
               </div>
             </div>
-            
+
             <div className="stat">
               <div className="stat-title">Total Upvotes</div>
               <div className="stat-value text-success">
                 {reviews.reduce(
                   (sum, r) => sum + Math.max(0, Number(r.reputationScore)),
-                  0
+                  0,
                 )}
               </div>
             </div>
