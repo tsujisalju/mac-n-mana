@@ -60,3 +60,52 @@ export async function getReplyCount(reviewId: number) {
   });
   return replyCount as number;
 }
+export async function getReview(reviewId: number) {
+  const review = await readContract(config, {
+    ...reviewRegistryConfig,
+    functionName: "getReview",
+    args: [reviewId],
+  });
+  return review as {
+    reviewer: string;
+    placeId: string;
+    ipfsHash: string;
+    rating: number;
+    timestamp: bigint;
+    reputationScore: bigint;
+  };
+}
+
+export async function getReviewCount() {
+  const count = await readContract(config, {
+    ...reviewRegistryConfig,
+    functionName: "reviewCount",
+    args: [],
+  });
+  return count as bigint;
+}
+
+export async function getUserReviews(userAddress: string) {
+  try {
+    const totalReviews = await getReviewCount();
+    const userReviews = [];
+
+    for (let i = 0; i < Number(totalReviews); i++) {
+      try {
+        const review = await getReview(i);
+        if (review.reviewer.toLowerCase() === userAddress.toLowerCase()) {
+          userReviews.push({ reviewId: i, ...review });
+        }
+      } catch (error) {
+        console.error(`Error fetching review with ID ${i}:`, error);
+      }
+    }
+    return userReviews;
+  } catch (error) {
+    console.error(
+      `Error fetching user reviews for address ${userAddress}:`,
+      error,
+    );
+    return [];
+  }
+}
