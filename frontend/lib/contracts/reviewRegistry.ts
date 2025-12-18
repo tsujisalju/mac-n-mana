@@ -5,7 +5,7 @@ import { getAccount } from "wagmi/actions";
 import { config } from "../wagmi";
 
 export const reviewRegistryConfig = {
-  address: "0x477A27B05E82364c7D4f0d0b82399f6CB600149b",
+  address: "0x62EA83F0cDE8d2deDCd16f06a86549b19a53809C",
   abi: abi.abi,
 } as const;
 

@@ -57,4 +57,39 @@ contract ReviewRegistry {
     function getScore(uint256 reviewId) external view returns (int256) {
         return reviews[reviewId].reputationScore;
     }
+
+    struct Reply {
+        address author;
+        string ipfsHash;
+        uint256 timestamp;
+        uint256 parentReviewId;
+        uint256 parentReplyId;
+    }
+
+    mapping(uint256 => Reply[]) public repliesByReview;
+
+    event ReplyAdded(uint256 indexed reviewId, uint256 indexed replyIndex, address indexed author, string ipfsHash);
+
+    function addReply(uint256 reviewId, string calldata ipfsHash, uint256 parentReplyId) external {
+        Reply memory r = Reply({
+            author: msg.sender,
+            ipfsHash: ipfsHash,
+            timestamp: block.timestamp,
+            parentReviewId: reviewId,
+            parentReplyId: parentReplyId
+        });
+
+        repliesByReview[reviewId].push(r);
+        emit ReplyAdded(reviewId, repliesByReview[reviewId].length - 1, msg.sender, ipfsHash);
+    }
+
+    function getReplyCount(uint256 reviewId) external view returns (uint256) {
+        return repliesByReview[reviewId].length;
+    }
+
+    function getReply(uint256 reviewId, uint256 index) external view returns (address author, string memory ipfsHash, uint256 timestamp, uint256 parentReplyId) {
+        Reply[] storage replies = repliesByReview[reviewId];
+        Reply storage reply = replies[index];
+        return (reply.author, reply.ipfsHash, reply.timestamp, reply.parentReplyId);
+    }
 }

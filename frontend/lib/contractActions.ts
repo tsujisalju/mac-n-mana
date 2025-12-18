@@ -39,3 +39,24 @@ export async function getUserReputation(address: string) {
   });
   return userReputation as bigint;
 }
+
+export async function submitReply(
+  reviewId: number,
+  ipfsHash: string,
+  parentReplyId: number,
+) {
+  return await writeContract(config, {
+    ...reviewRegistryConfig,
+    functionName: "addReply",
+    args: [reviewId, ipfsHash, parentReplyId],
+  });
+}
+
+export async function getReplyCount(reviewId: number) {
+  const replyCount = await readContract(config, {
+    ...reviewRegistryConfig,
+    functionName: "getReplyCount",
+    args: [reviewId],
+  });
+  return replyCount as number;
+}
