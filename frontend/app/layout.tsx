@@ -5,7 +5,6 @@ import Script from "next/script";
 import NavBar from "@/components/NavBar";
 import { Providers } from "./providers";
 import Welcome from "@/components/Welcome";
-import { EventsProvider } from "@/lib/blockscout";
 
 const onest = Onest({
   variable: "--font-onest",
@@ -30,12 +29,10 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         <Providers>
-          <EventsProvider>
-            <Welcome />
-            <NavBar />
-            {children}
-            <div id="toast-container" className="toast"></div>
-          </EventsProvider>
+          <Welcome />
+          <NavBar />
+          {children}
+          <div id="toast-container" className="toast"></div>
         </Providers>
       </body>
     </html>

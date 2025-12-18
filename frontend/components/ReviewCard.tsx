@@ -1,9 +1,5 @@
 import { ReplyParams, ReviewParams, useEvents } from "@/lib/blockscout";
-import {
-  getReplyCount,
-  getReviewScore,
-  voteReview,
-} from "@/lib/contractActions";
+import { getReviewScore, voteReview } from "@/lib/contractActions";
 import { getReviewDataByCID } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 import { truncateString } from "@/lib/truncate";
