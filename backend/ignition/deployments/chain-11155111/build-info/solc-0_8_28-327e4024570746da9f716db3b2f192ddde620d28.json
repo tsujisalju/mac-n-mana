@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-327e4024570746da9f716db3b2f192ddde620d28",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/ReviewRegistry.sol": "project/contracts/ReviewRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/ReviewRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.28;\r\n\r\ncontract ReviewRegistry {\r\n    struct Review {\r\n        address reviewer;\r\n        string placeId;\r\n        string ipfsHash;\r\n        uint8 rating;\r\n        uint256 timestamp;\r\n        int256 reputationScore;\r\n    }\r\n\r\n    mapping(uint256 => Review) public reviews; //store reviews by ID\r\n    uint256 public reviewCount; //increment ID for each new review\r\n\r\n    mapping(address => int256) public userReputation; //track reputation score for each ReviewRegistry\r\n\r\n    event ReviewSubmitted(uint256 reviewId, address indexed reviewer, string placeId, string ipfsHash, uint256 timestamp);\r\n    event ReviewVoted(uint256 reviewId, address indexed voter, int8 vote, uint256 timestamp);\r\n\r\n    function submitReview(string memory placeId, string memory ipfsHash, uint8 rating) external {\r\n        require(rating >= 1 && rating <= 5, \"Invalid rating\");\r\n        reviews[reviewCount] = Review({\r\n            reviewer: msg.sender,\r\n            placeId: placeId,\r\n            ipfsHash: ipfsHash,\r\n            rating: rating,\r\n            timestamp: block.timestamp,\r\n            reputationScore: 0\r\n        });\r\n\r\n        emit ReviewSubmitted(reviewCount, msg.sender, placeId, ipfsHash, block.timestamp);\r\n        reviewCount++;\r\n    }\r\n\r\n    function voteReview(uint256 reviewId, int8 vote) external {\r\n        require(reviewId < reviewCount, \"Review does not exist\");\r\n        require(vote == 1 || vote == -1, \"Vote must be +1 or -1\");\r\n\r\n        Review storage review = reviews[reviewId];\r\n        review.reputationScore += vote;\r\n        userReputation[review.reviewer] += vote;\r\n\r\n        emit ReviewVoted(reviewId, msg.sender, vote, block.timestamp);\r\n    }\r\n\r\n    function getReview(uint256 reviewId) external view returns (Review memory) {\r\n        require(reviewId < reviewCount, \"Review does not exist\");\r\n        return reviews[reviewId];\r\n    }\r\n\r\n    function getUserReputation(address user) external view returns (int256) {\r\n        return userReputation[user];\r\n    }\r\n\r\n    function getScore(uint256 reviewId) external view returns (int256) {\r\n        return reviews[reviewId].reputationScore;\r\n    }\r\n\r\n    struct Reply {\r\n        address author;\r\n        string ipfsHash;\r\n        uint256 timestamp;\r\n        uint256 parentReviewId;\r\n        uint256 parentReplyId;\r\n    }\r\n\r\n    mapping(uint256 => Reply[]) public repliesByReview;\r\n\r\n    event ReplyAdded(uint256 indexed reviewId, uint256 indexed replyIndex, address indexed author, string ipfsHash);\r\n\r\n    function addReply(uint256 reviewId, string calldata ipfsHash, uint256 parentReplyId) external {\r\n        Reply memory r = Reply({\r\n            author: msg.sender,\r\n            ipfsHash: ipfsHash,\r\n            timestamp: block.timestamp,\r\n            parentReviewId: reviewId,\r\n            parentReplyId: parentReplyId\r\n        });\r\n\r\n        repliesByReview[reviewId].push(r);\r\n        emit ReplyAdded(reviewId, repliesByReview[reviewId].length - 1, msg.sender, ipfsHash);\r\n    }\r\n\r\n    function getReplyCount(uint256 reviewId) external view returns (uint256) {\r\n        return repliesByReview[reviewId].length;\r\n    }\r\n\r\n    function getReply(uint256 reviewId, uint256 index) external view returns (address author, string memory ipfsHash, uint256 timestamp, uint256 parentReplyId) {\r\n        Reply[] storage replies = repliesByReview[reviewId];\r\n        Reply storage reply = replies[index];\r\n        return (reply.author, reply.ipfsHash, reply.timestamp, reply.parentReplyId);\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}
