@@ -39,7 +39,10 @@ export default function MapSearch() {
     duration: string;
   } | null>(null);
 
-  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+  const [destinationLatLng, setDestinationLatLng] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const messages = [
     "Ate somewhere awesome today?",
@@ -58,6 +61,7 @@ export default function MapSearch() {
       directionsPanelRef.current.innerHTML = "";
     }
     setRouteInfo(null);
+    setDestinationLatLng(null); // Add this to clear destination
   }, []);
 
   useEffect(() => {
@@ -122,96 +126,46 @@ export default function MapSearch() {
         p.getUrl({ maxWidth: 400, maxHeight: 300 }),
       );
       setPhotos(photosUrls ?? []);
+
+      // Add this to store destination lat/lng
+      setDestinationLatLng({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
     },
     [clearNavigation],
   );
 
-  const handleShowRoute = () => {
-    if (!id || !directionsServiceRef.current || !directionsRendererRef.current)
-      return;
+  const handleOpenInGoogleMaps = () => {
+    if (!destinationLatLng) return;
 
-    console.log("🔵 Starting navigation request...");
-    setIsCalculatingRoute(true);
-
-    const calculateRoute = (
-      origin: google.maps.LatLngLiteral,
-      sourceName: string,
-    ) => {
-      console.log(`🚗 Calculating route using [${sourceName}]`, origin);
-
-      const request: google.maps.DirectionsRequest = {
-        origin: origin,
-        destination: { placeId: id },
-        travelMode: google.maps.TravelMode.DRIVING,
-        provideRouteAlternatives: false,
-      };
-
-      directionsServiceRef.current?.route(request, (result, status) => {
-        setIsCalculatingRoute(false);
-
-        if (status === google.maps.DirectionsStatus.OK && result) {
-          console.log("✅ Route found!");
-          directionsRendererRef.current?.setDirections(result);
-
-          if (directionsPanelRef.current) {
-            directionsRendererRef.current?.setPanel(directionsPanelRef.current);
-          }
-
-          const leg = result.routes[0]?.legs[0];
-          if (leg && leg.distance && leg.duration) {
-            setRouteInfo({
-              distance: leg.distance.text,
-              duration: leg.duration.text,
-            });
-            console.log(
-              `🏁 Trip Info: ${leg.distance.text} (${leg.duration.text})`,
-            );
-          }
-        } else {
-          console.error("❌ Directions request failed:", status);
-          alert("Could not calculate route. " + status);
-        }
-      });
+    const openMaps = (origin?: string) => {
+      const url = origin
+        ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destinationLatLng.lat},${destinationLatLng.lng}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${destinationLatLng.lat},${destinationLatLng.lng}`;
+      window.open(url, "_blank");
     };
 
     if (navigator.geolocation) {
-      console.log("🛰️ Requesting High Accuracy GPS...");
-
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      };
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log("✅ GPS Signal Received:", position.coords);
-          calculateRoute(
-            {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            "Real GPS Location",
-          );
+          const origin = `${position.coords.latitude},${position.coords.longitude}`;
+          openMaps(origin);
         },
         (error) => {
-          console.warn("⚠️ GPS Failed/Denied. Error:", error.message);
-          console.warn("⚠️ Falling back to DEFAULT location (KL City Centre)");
-
-          // Fallback to KLCC
-          calculateRoute(
-            { lat: 3.139, lng: 101.6869 },
-            "Default Location (KLCC)",
-          );
+          // If GPS fails, open Maps with destination only, let user input origin
+          console.warn("No GPS, fallback to open Maps:", error);
+          openMaps();
         },
-        options,
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
       );
     } else {
-      console.error("❌ Browser does not support geolocation");
-      calculateRoute(
-        { lat: 3.139, lng: 101.6869 },
-        "Default Location (Browser Unsupported)",
-      );
+      // If geolocation not supported, open Maps with destination only
+      openMaps();
     }
   };
 
@@ -369,7 +323,7 @@ export default function MapSearch() {
         </label>
         {id && (
           <div className="flex flex-col space-y-4 xl:h-[90vh] xl:overflow-y-auto pr-2">
-            <hr className="border-base-300 border-1" />
+            <hr className="border-base-300 border" />
 
             {routeInfo ? (
               <div className="card bg-base-200 shadow-md p-4">
@@ -401,7 +355,7 @@ export default function MapSearch() {
               <>
                 <h1 className="text-3xl font-bold">{name}</h1>
                 {photos.length > 0 && (
-                  <div className="h-[300px]">
+                  <div className="h-75">
                     <div className="carousel rounded-md">
                       {photos.map((photo, index) => (
                         <div
@@ -430,15 +384,10 @@ export default function MapSearch() {
                     Make a review
                   </Link>
                   <button
-                    onClick={handleShowRoute}
+                    onClick={handleOpenInGoogleMaps}
                     className="btn btn-primary w-max"
-                    disabled={isCalculatingRoute}
                   >
-                    {isCalculatingRoute ? (
-                      <span className="loading loading-spinner loading-xs"></span>
-                    ) : (
-                      "Start Navigation"
-                    )}
+                    Open in Google Maps
                   </button>
                 </div>
               </>
@@ -470,7 +419,7 @@ export default function MapSearch() {
       </div>
       <div
         ref={mapRef}
-        className="h-[300px] xl:h-[90vh] w-full rounded-md border-base-300 border-2"
+        className="h-75 xl:h-[90vh] w-full rounded-md border-base-300 border-2"
       />
     </div>
   );
