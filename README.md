@@ -77,3 +77,112 @@ Mac n' Mana offers a comprehensive set of features that combine the power of blo
 - **For Reviewers**: Build reputation and contribute to a trustworthy review ecosystem  
 - **For Restaurants**: Receive genuine feedback in a transparent, manipulation-resistant system
 - **For the Community**: Participate in a decentralized platform owned by its users
+
+## Local Development Setup
+
+Follow these steps to run Mac n' Mana locally for development:
+
+### Prerequisites
+
+- **Node.js** (v18 or higher)
+- **npm** or **yarn** package manager
+- **Git** for version control
+- **Ethereum Wallet** (MetaMask recommended) for testing blockchain features
+
+### Required API Keys
+
+You'll need to obtain the following API keys:
+
+1. **Google Maps API Key**
+   - Visit the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable the following APIs:
+     - Maps JavaScript API
+     - Places API
+   - Create credentials (API Key) and restrict it to your domain for security
+
+2. **Storacha (IPFS) Credentials**
+   - Sign up at [Storacha](https://storacha.network/)
+   - Generate your IPFS storage key and proof for decentralized file storage
+
+### Environment Variables
+
+Create a `.env.local` file in the `frontend` directory with the following variables:
+
+```bash
+# Google Maps Integration
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
+# Storacha IPFS Storage
+STORACHA_KEY=your_storacha_key_here
+STORACHA_PROOF=your_storacha_proof_here
+```
+
+### Installation & Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd mac-n-mana
+   ```
+
+2. **Install frontend dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. **Install backend dependencies** (optional, for local blockchain development)
+   ```bash
+   cd ../backend
+   npm install
+   ```
+
+4. **Set up environment variables**
+   - Copy your API keys to the `.env.local` file as described above
+   - Ensure the file is in the `frontend` directory
+
+### Running the Application
+
+1. **Start the frontend development server**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   
+   The application will be available at `http://localhost:3000`
+
+2. **Connect your wallet**
+   - Install MetaMask or another Ethereum wallet browser extension
+   - Switch to Sepolia testnet in your wallet
+   - Get Sepolia ETH from a [faucet](https://sepoliafaucet.com/) for testing
+
+### Development Features
+
+- **Hot Reload**: Changes to code automatically refresh the browser
+- **TypeScript Support**: Full type checking and IntelliSense
+- **Linting**: ESLint configuration for code quality
+- **Turbopack**: Fast bundling with Next.js 15's Turbopack
+
+### Testing the Platform
+
+1. **Search for restaurants** using the map interface
+2. **Connect your wallet** to enable blockchain features
+3. **Submit test reviews** (requires Sepolia ETH for gas fees)
+4. **Vote on reviews** to test the reputation system
+5. **Add replies** to test the discussion features
+
+### Troubleshooting
+
+- **Google Maps not loading**: Verify your Google Maps API key and ensure the Maps JavaScript API is enabled
+- **Wallet connection issues**: Make sure you're on Sepolia testnet and have sufficient ETH for gas fees
+- **IPFS upload failures**: Check your Storacha credentials and network connection
+- **Build errors**: Ensure you're using Node.js v18+ and all dependencies are installed
+
+### Network Configuration
+
+The frontend is configured to work with:
+- **Sepolia Testnet** for blockchain transactions
+- **IPFS via Storacha** for decentralized file storage
+- **Google Places API** for restaurant data
+- **Blockscout** for reading blockchain events

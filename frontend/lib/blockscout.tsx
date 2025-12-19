@@ -99,145 +99,6 @@ const getLogsApiUrl = `https://eth-sepolia.blockscout.com/api/v2/addresses/${rev
 const reviewMethodId = "352ee8b6";
 const replyMethodId = "4c9b45fa";
 
-export async function fetchReviewParamsByReviewId(
-  reviewId: number | string,
-): Promise<ReviewParams> {
-  const id = reviewId.toString();
-  const res = await fetch(getLogsApiUrl);
-  if (!res.ok) {
-    console.error(
-      "Failed to fetch logs from Blockscout:",
-      res.status,
-      res.statusText,
-    );
-    return {
-      reviewId: "",
-      reviewer: "",
-      placeId: "",
-      ipfsHash: "",
-    };
-  }
-  const data: EventLogs = await res.json();
-  console.log(data);
-  for (const event of data.items) {
-    if (!event.decoded || !Array.isArray(event.decoded.parameters)) {
-      continue;
-    }
-    const methodId = event.decoded.method_id;
-    if (methodId != reviewMethodId) {
-      continue;
-    }
-    const params = event.decoded.parameters;
-    if (params.some((p) => p.name == "reviewId" && p.value == id)) {
-      const reviewParams: ReviewParams = {
-        reviewId: params.find((p) => p.name === "reviewId")?.value ?? "",
-        reviewer: params.find((p) => p.name === "reviewer")?.value ?? "",
-        placeId: params.find((p) => p.name === "placeId")?.value ?? "",
-        ipfsHash: params.find((p) => p.name === "ipfsHash")?.value ?? "",
-      };
-      return reviewParams;
-    }
-  }
-  console.error("No review found with this id.");
-  return {
-    reviewId: "",
-    reviewer: "",
-    placeId: "",
-    ipfsHash: "",
-  };
-}
-
-export async function fetchReviewParamsListByPlaceId(
-  placeId: string,
-): Promise<ReviewParams[]> {
-  const res = await fetch(getLogsApiUrl);
-  if (!res.ok) {
-    console.error(
-      "Failed to fetch logs from Blockscout:",
-      res.status,
-      res.statusText,
-    );
-    return [];
-  }
-  const data: EventLogs = await res.json();
-
-  const placeData = data.items.filter((event) => {
-    // Ensure decoded exists and parameters array exists
-    if (!event.decoded || !Array.isArray(event.decoded.parameters)) {
-      return false;
-    }
-    if (event.decoded.method_id != reviewMethodId) {
-      return false;
-    }
-    // Check for ReviewSubmitted event and matching placeId
-    return (
-      event.decoded.parameters.some(
-        (p) => p.name === "placeId" && p.value === placeId,
-      ) && event.decoded.parameters.some((p) => p.name === "ipfsHash")
-    );
-  });
-
-  const reviewParamsList: ReviewParams[] = placeData
-    .map((event) => {
-      if (!event.decoded) return null; // Should be filtered already, but safe check
-      const params = event.decoded.parameters;
-      const reviewParams: ReviewParams = {
-        reviewId: params.find((p) => p.name === "reviewId")?.value ?? "",
-        reviewer: params.find((p) => p.name === "reviewer")?.value ?? "",
-        placeId: params.find((p) => p.name === "placeId")?.value ?? "",
-        ipfsHash: params.find((p) => p.name === "ipfsHash")?.value ?? "",
-      };
-      return reviewParams;
-    })
-    .filter((params) => params != null);
-  return reviewParamsList;
-}
-
-export async function getRepliesByReviewId(
-  reviewId: number,
-): Promise<ReplyParams[]> {
-  const res = await fetch(getLogsApiUrl);
-  if (!res.ok) {
-    console.error(
-      "Failed to fetch logs from Blockscout:",
-      res.status,
-      res.statusText,
-    );
-    return [];
-  }
-  const data: EventLogs = await res.json();
-  const replyData = data.items.filter((event) => {
-    // Ensure decoded exists and parameters array exists
-    if (!event.decoded || !Array.isArray(event.decoded.parameters)) {
-      return false;
-    }
-    if (event.decoded.method_id != replyMethodId) {
-      return false;
-    }
-    // Check for ReviewSubmitted event and matching reviewId
-    return (
-      event.decoded.parameters.some(
-        (p) => p.name === "reviewId" && p.value === reviewId.toString(),
-      ) && event.decoded.parameters.some((p) => p.name === "ipfsHash")
-    );
-  });
-
-  const replyParamsList = replyData
-    .map((event) => {
-      if (!event.decoded) return null;
-      const params = event.decoded.parameters;
-      const replyParams: ReplyParams = {
-        reviewId: params.find((p) => p.name == "reviewId")?.value ?? "",
-        author: params.find((p) => p.name == "author")?.value ?? "",
-        ipfsHash: params.find((p) => p.name == "ipfsHash")?.value ?? "",
-      };
-      return replyParams;
-    })
-    .filter((params) => params != null);
-
-  return replyParamsList;
-}
-
 async function getDecodedEvents(): Promise<Decoded[]> {
   const res = await fetch(getLogsApiUrl);
   if (!res.ok) {
@@ -260,6 +121,7 @@ type EventsContextType = {
   fetchReviewsByPlaceId: (placeId: string) => Promise<ReviewParams[]>;
   fetchReviewByReviewId: (reviewId: number) => Promise<ReviewParams>;
   fetchRepliesByReviewId: (reviewId: number) => Promise<ReplyParams[]>;
+  refreshEvents: () => Promise<void>;
 };
 
 const EventsContext = createContext<EventsContextType | undefined>(undefined);
@@ -370,6 +232,11 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
+  const refreshEvents = async () => {
+    const raw = await getDecodedEvents();
+    setEvents(raw);
+  };
+
   return (
     <EventsContext.Provider
       value={{
@@ -377,6 +244,7 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
         fetchRepliesByReviewId,
         fetchReviewByReviewId,
         fetchReviewsByPlaceId,
+        refreshEvents,
       }}
     >
       {children}

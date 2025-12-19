@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEvents } from "@/lib/blockscout";
 
 const MAX_PHOTOS = 10;
 
@@ -30,6 +31,7 @@ export default function ReviewForm() {
   const placeId = searchParams.get("placeId") ?? "";
   const name = searchParams.get("name");
   const router = useRouter();
+  const { refreshEvents } = useEvents();
 
   useEffect(() => {
     if (!placeId || !name) {
@@ -111,6 +113,7 @@ export default function ReviewForm() {
       await submitReview(placeId, cid, rating);
       showToast("Your review has been submitted!", "success");
       setUploadStage("completed");
+      await refreshEvents();
     } catch (err) {
       console.error("Upload failed:", err);
       setUploadStage("error");

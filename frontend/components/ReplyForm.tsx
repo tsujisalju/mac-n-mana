@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchReviewParamsByReviewId, ReviewParams } from "@/lib/blockscout";
+import { ReviewParams, useEvents } from "@/lib/blockscout";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -15,6 +15,7 @@ export default function ReplyForm() {
   const modalRef = useRef<HTMLDialogElement>(null);
   const [uploadStage, setUploadStage] = useState<UploadStage>("idle");
   const [text, setText] = useState<string>("");
+  const { fetchReviewByReviewId, refreshEvents } = useEvents();
   const [isLoadingReview, setIsLoadingReview] = useState<boolean>(false);
   const [review, setReview] = useState<ReviewParams>({
     reviewId: "",
@@ -31,7 +32,7 @@ export default function ReplyForm() {
     const fetchReview = async (id: string) => {
       setIsLoadingReview(true);
       try {
-        const data = await fetchReviewParamsByReviewId(id);
+        const data = await fetchReviewByReviewId(Number(id));
         setReview(data);
       } catch (err) {
         console.error("Error when loading review:", err);
@@ -40,7 +41,7 @@ export default function ReplyForm() {
       }
     };
     if (reviewId) fetchReview(reviewId);
-  }, [reviewId]);
+  }, [reviewId, fetchReviewByReviewId]);
 
   useEffect(() => {
     if (showModal) {
@@ -65,6 +66,7 @@ export default function ReplyForm() {
       await submitReply(Number(reviewId), cid, 0);
       showToast("Your reply has been submitted!", "success");
       setUploadStage("completed");
+      await refreshEvents();
     } catch (err) {
       console.error("Upload failed:", err);
       setUploadStage("error");
