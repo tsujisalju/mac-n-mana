@@ -154,6 +154,7 @@ export default function MapSearch() {
         },
         (error) => {
           // If GPS fails, open Maps with destination only, let user input origin
+          console.warn("No GPS, fallback to open Maps:", error);
           openMaps();
         },
         {
