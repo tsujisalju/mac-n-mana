@@ -41,6 +41,11 @@ export default function MapSearch() {
 
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
 
+  const [destinationLatLng, setDestinationLatLng] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
   const messages = [
     "Ate somewhere awesome today?",
     "Found a hidden food gem?",
@@ -58,6 +63,7 @@ export default function MapSearch() {
       directionsPanelRef.current.innerHTML = "";
     }
     setRouteInfo(null);
+    setDestinationLatLng(null); // Add this to clear destination
   }, []);
 
   useEffect(() => {
@@ -122,6 +128,12 @@ export default function MapSearch() {
         p.getUrl({ maxWidth: 400, maxHeight: 300 }),
       );
       setPhotos(photosUrls ?? []);
+
+      // Add this to store destination lat/lng
+      setDestinationLatLng({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
     },
     [clearNavigation],
   );
@@ -212,6 +224,38 @@ export default function MapSearch() {
         { lat: 3.139, lng: 101.6869 },
         "Default Location (Browser Unsupported)",
       );
+    }
+  };
+
+  const handleOpenInGoogleMaps = () => {
+    if (!destinationLatLng) return;
+
+    const openMaps = (origin?: string) => {
+      const url = origin
+        ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destinationLatLng.lat},${destinationLatLng.lng}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${destinationLatLng.lat},${destinationLatLng.lng}`;
+      window.open(url, '_blank');
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const origin = `${position.coords.latitude},${position.coords.longitude}`;
+          openMaps(origin);
+        },
+        (error) => {
+          // If GPS fails, open Maps with destination only, let user input origin
+          openMaps();
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+      );
+    } else {
+      // If geolocation not supported, open Maps with destination only
+      openMaps();
     }
   };
 
@@ -430,15 +474,10 @@ export default function MapSearch() {
                     Make a review
                   </Link>
                   <button
-                    onClick={handleShowRoute}
+                    onClick={handleOpenInGoogleMaps}
                     className="btn btn-primary w-max"
-                    disabled={isCalculatingRoute}
                   >
-                    {isCalculatingRoute ? (
-                      <span className="loading loading-spinner loading-xs"></span>
-                    ) : (
-                      "Start Navigation"
-                    )}
+                    Open in Google Maps
                   </button>
                 </div>
               </>
