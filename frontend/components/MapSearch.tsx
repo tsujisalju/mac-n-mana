@@ -2,7 +2,6 @@
 "use client";
 
 import { ReviewParams, useEvents } from "@/lib/blockscout";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
@@ -27,7 +26,6 @@ export default function MapSearch() {
 
   const [id, setId] = useState("");
   const [name, setName] = useState("");
-  const [photos, setPhotos] = useState<string[]>([]);
   const { fetchReviewsByPlaceId } = useEvents();
   const [reviews, setReviews] = useState<ReviewParams[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +66,6 @@ export default function MapSearch() {
     if (!isConnected) {
       setId("");
       setName("");
-      setPhotos([]);
       setReviews([]);
       clearNavigation();
       if (searchInputRef.current) {
@@ -121,11 +118,6 @@ export default function MapSearch() {
       if (searchInputRef.current) {
         searchInputRef.current.value = placeName;
       }
-
-      const photosUrls = place.photos?.map((p) =>
-        p.getUrl({ maxWidth: 400, maxHeight: 300 }),
-      );
-      setPhotos(photosUrls ?? []);
 
       // Add this to store destination lat/lng
       setDestinationLatLng({
@@ -354,28 +346,6 @@ export default function MapSearch() {
             ) : (
               <>
                 <h1 className="text-3xl font-bold">{name}</h1>
-                {photos.length > 0 && (
-                  <div className="h-75">
-                    <div className="carousel rounded-md">
-                      {photos.map((photo, index) => (
-                        <div
-                          key={index}
-                          id={`slide-${index}`}
-                          className="carousel-item"
-                        >
-                          <Image
-                            src={photo}
-                            className="w-full"
-                            alt={name + " photo " + index}
-                            width={400}
-                            height={300}
-                            unoptimized
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <div className="flex flex-row space-x-2">
                   <Link
                     href={`/review?placeId=${id}&name=${encodeURIComponent(name)}`}
